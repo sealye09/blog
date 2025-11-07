@@ -1,0 +1,121 @@
+/* 404 Error Page */
+.error-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+
+.error-content {
+  text-align: center;
+}
+
+.error-code {
+  font-size: 8rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-orange-500);
+  margin-bottom: 1rem;
+}
+
+.error-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.error-description {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+}
+
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.error-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.error-button--primary {
+  background: var(--color-orange-500);
+  color: #ffffff;
+}
+
+.error-button--primary:hover {
+  background: var(--color-orange-600);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.error-button--secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+}
+
+.error-button--secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--color-orange-500);
+  transform: translateY(-2px);
+}
+
+/* Mobile (≤ 767px) */
+@media (max-width: 767px) {
+  .error-page {
+    padding: 3rem 1rem;
+  }
+
+  .error-code {
+    font-size: 5rem;
+  }
+
+  .error-title {
+    font-size: 1.75rem;
+  }
+
+  .error-description {
+    font-size: 1rem;
+  }
+
+  .error-actions {
+    flex-direction: column;
+  }
+
+  .error-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Small Mobile (≤ 479px) */
+@media (max-width: 479px) {
+  .error-page {
+    padding: 3rem 0.75rem;
+  }
+
+  .error-code {
+    font-size: 4rem;
+  }
+
+  .error-title {
+    font-size: 1.5rem;
+  }
+
+  .error-description {
+    font-size: 0.9375rem;
+    margin-bottom: 2rem;
+  }
+}

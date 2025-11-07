@@ -1,0 +1,382 @@
+import path from "node:path";
+import process from "node:process";
+
+import * as fs from "node:fs/promises";
+import { glob } from "glob";
+import matter from "gray-matter";
+import MarkdownIt from "markdown-it";
+import mdAnchor from "markdown-it-anchor";
+import hljs from "highlight.js";
+import dayjs from "dayjs";
+
+import { config, OUT_DIR, GITHUB_REPO_URL } from "./config.js";
+
+interface PostMeta {
+  title: string;
+  date: string | null;
+  tags: string[];
+  summary: string;
+}
+
+interface ListEntry {
+  slug: string;
+  title: string;
+  date: string;
+  url: string;
+  summary: string;
+  dateValue: number;
+}
+
+function sanitizeSlug(s: string): string {
+  const normalized = String(s).trim();
+  if (!normalized) {
+    return "";
+  }
+
+  return normalized
+    .toLowerCase()
+    .replace(/[\s/\\]+/g, "-")
+    .replace(/[^\p{Letter}\p{Number}\-_.]+/gu, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+async function readMdFiles(fromDir: string): Promise<string[]> {
+  const pattern = path.join(fromDir, "**/*.md").replaceAll("\\", "/");
+  const files = await glob(pattern, { nodir: true });
+  return files.sort();
+}
+
+async function ensureDir(dir: string): Promise<void> {
+  await fs.mkdir(dir, { recursive: true });
+}
+
+async function copyAssets(fromDir: string, outDir: string): Promise<void> {
+  const absFrom = path.isAbsolute(fromDir) ? fromDir : path.join(process.cwd(), fromDir);
+  const dest = path.join(outDir, "assets");
+  await ensureDir(dest);
+  try {
+    await fs.cp(absFrom, dest, { recursive: true, force: true });
+  } catch (err: any) {
+    if (err?.code === "ENOENT") {
+      console.warn(`未找到资源目录：${absFrom}`);
+      return;
+    }
+    throw err;
+  }
+}
+
+function createMdRenderer(): MarkdownIt {
+  const md: MarkdownIt = new MarkdownIt({
+    html: true,
+    linkify: true,
+    typographer: true,
+    highlight(code: string, lang: string) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return `<pre class="hljs"><code>${
+            hljs.highlight(code, { language: lang, ignoreIllegals: true }).value
+          }</code></pre>`;
+        } catch {
+          /* noop */
+        }
+      }
+      return `<pre class=\"hljs\"><code>${md.utils.escapeHtml(code)}</code></pre>`;
+    },
+  }).use(mdAnchor as any, {
+    permalink: (mdAnchor as any).permalink.ariaHidden({}),
+  });
+  return md;
+}
+
+function normalizeMeta(
+  meta: any,
+  filePath: string,
+): PostMeta & { dateCreated?: string; dateModified?: string } {
+  const title: string = meta.title || path.basename(filePath, path.extname(filePath));
+  // Support multiple date field names
+  const date: string | null = meta.date || meta["date created"] || meta["date modified"] || null;
+  const dateCreated: string | undefined = meta["date created"] || meta.date;
+  const dateModified: string | undefined = meta["date modified"];
+  const tags: string[] = Array.isArray(meta.tags)
+    ? meta.tags
+    : meta.tags
+      ? String(meta.tags)
+          .split(/[\,\s]+/)
+          .filter(Boolean)
+      : [];
+  const summary: string = meta.summary || meta.description || "";
+  return { title, date, tags, summary, dateCreated, dateModified };
+}
+
+function renderTemplate(tpl: string, vars: Record<string, unknown>): string {
+  return tpl.replace(/{{\s*([\w.]+)\s*}}/g, (_: string, key: string) => {
+    const val = key.split(".").reduce<any>((o, k) => (o ? o[k] : ""), vars as any);
+    return val == null ? "" : String(val);
+  });
+}
+
+function buildCssLinks(basePath: string, pageType: string): string {
+  const commonCss = `<link rel="stylesheet" href="${basePath}/assets/common.css" />`;
+  const pageCss = `<link rel="stylesheet" href="${basePath}/assets/${pageType}.css" />`;
+  return `${commonCss}\n    ${pageCss}`;
+}
+
+function buildBasePath(directoryDepth: number): string {
+  const totalLevels = Math.max(directoryDepth + 1, 1);
+  return Array(totalLevels).fill("..").join("/");
+}
+
+async function main(): Promise<void> {
+  const outDir = OUT_DIR;
+
+  const fromDir = config.FROM_DIR;
+  const postsDir = config.POSTS_DIR;
+  const assetsFrom = config.ASSETS_FROM;
+
+  const md = createMdRenderer();
+  const files = await readMdFiles(fromDir);
+
+  // Load templates
+  const tplDir = path.join(process.cwd(), "templates");
+  const baseTpl = await fs.readFile(path.join(tplDir, "base.html"), "utf8");
+  const postTpl = await fs.readFile(path.join(tplDir, "post.html"), "utf8");
+  const indexTpl = await fs.readFile(path.join(tplDir, "index.html"), "utf8");
+
+  const postsOutDir = path.join(outDir, postsDir);
+  await ensureDir(postsOutDir);
+  await copyAssets(assetsFrom, outDir);
+
+  const entries: ListEntry[] = [];
+
+  for (const file of files) {
+    const raw = await fs.readFile(file, "utf8");
+    const { data, content } = matter(raw);
+    const meta = normalizeMeta(data, file);
+    const slugSource = (data as any).slug || meta.title || path.basename(file, path.extname(file));
+    const fallbackSlug = sanitizeSlug(path.basename(file, path.extname(file))) || "post";
+    const baseSlug = sanitizeSlug(slugSource) || fallbackSlug;
+    const html = md.render(content);
+
+    let dateValue = 0;
+    let year = "";
+    let month = "";
+
+    if (meta.date) {
+      const parsedDate = new Date(meta.date);
+      if (!Number.isNaN(parsedDate.getTime())) {
+        dateValue = parsedDate.getTime();
+        year = String(parsedDate.getFullYear());
+        month = String(parsedDate.getMonth() + 1).padStart(2, "0");
+      }
+    }
+
+    if (!dateValue) {
+      const stat = await fs.stat(file);
+      dateValue = stat.mtimeMs;
+      const fallbackDate = new Date(stat.mtimeMs);
+      year = String(fallbackDate.getFullYear());
+      month = String(fallbackDate.getMonth() + 1).padStart(2, "0");
+    }
+
+    const slugSegments = [year, month, baseSlug].filter(Boolean);
+    const directoriesDepth = Math.max(slugSegments.length - 1, 0);
+    const relativeSlugPath = slugSegments.join("/");
+
+    const postDir =
+      slugSegments.length > 1 ? path.join(postsOutDir, ...slugSegments.slice(0, -1)) : postsOutDir;
+    await ensureDir(postDir);
+
+    const outFile = path.join(postDir, `${baseSlug}.html`);
+    const basePath = buildBasePath(directoriesDepth);
+
+    let dateHtml = "";
+    if ((meta as any).dateCreated || (meta as any).dateModified) {
+      dateHtml = '<div class="post-meta">';
+      if ((meta as any).dateCreated) {
+        dateHtml += `<div class=\"post-meta__item\"><span class=\"post-meta__label\">创建日期：</span><time>${dayjs((meta as any).dateCreated).format("YYYY-MM-DD")}</time></div>`;
+      }
+      if ((meta as any).dateModified) {
+        dateHtml += `<div class=\"post-meta__item\"><span class=\"post-meta__label\">修改日期：</span><time>${dayjs((meta as any).dateModified).format("YYYY-MM-DD")}</time></div>`;
+      }
+      dateHtml += "</div>";
+    }
+
+    const postHtml = renderTemplate(postTpl, {
+      title: meta.title,
+      dateHtml,
+      content: html,
+      metadata: JSON.stringify({ ...meta, slug: relativeSlugPath, year, month }, null, 2),
+    });
+
+    const fullHtml = renderTemplate(baseTpl, {
+      pageTitle: meta.title,
+      basePath,
+      content: postHtml,
+      siteTitle: `${config.USERNAME}'s Blog`,
+      githubUsername: config.GITHUB_USERNAME,
+      cssLinks: buildCssLinks(basePath, "post"),
+    });
+    await fs.writeFile(outFile, fullHtml, "utf8");
+
+    entries.push({
+      slug: relativeSlugPath,
+      title: meta.title,
+      date: meta.date || "",
+      url: `./${postsDir}/${relativeSlugPath}.html`,
+      summary: meta.summary || "",
+      dateValue,
+    });
+  }
+
+  entries.sort((a, b) => b.dateValue - a.dateValue);
+
+  const itemsHtml = entries
+    .map(
+      (e) => `
+    <article class="post-item">
+      <h2 class="post-title"><a href="${e.url}">${e.title}</a></h2>
+      ${e.date ? `<time class="post-date">${dayjs(e.date).format("YYYY-MM-DD")}</time>` : ""}
+      ${e.summary ? `<p class="post-summary">${e.summary}</p>` : ""}
+      <a class="post-readmore" href="${e.url}">阅读全文 →</a>
+    </article>
+  `,
+    )
+    .join("\n");
+
+  const indexHtml = renderTemplate(indexTpl, { items: itemsHtml });
+  const fullIndexHtml = renderTemplate(baseTpl, {
+    pageTitle: config.USERNAME,
+    basePath: ".",
+    content: indexHtml,
+    siteTitle: `${config.USERNAME}'s Blog`,
+    githubUsername: config.GITHUB_USERNAME,
+    cssLinks: buildCssLinks(".", "index"),
+  });
+
+  await fs.writeFile(path.join(outDir, "index.html"), fullIndexHtml, "utf8");
+
+  // Generate archive page
+  const archiveTpl = await fs.readFile(path.join(tplDir, "archive.html"), "utf8");
+  const archiveGroups = buildArchiveGroups(entries);
+  const archiveHtml = renderTemplate(archiveTpl, { groups: archiveGroups });
+  const fullArchiveHtml = renderTemplate(baseTpl, {
+    pageTitle: `归档 - ${config.USERNAME}`,
+    basePath: ".",
+    content: archiveHtml,
+    siteTitle: `${config.USERNAME}'s Blog`,
+    githubUsername: config.GITHUB_USERNAME,
+    cssLinks: buildCssLinks(".", "archive"),
+  });
+  await fs.writeFile(path.join(outDir, "archive.html"), fullArchiveHtml, "utf8");
+
+  // Generate 404 page
+  const error404Tpl = await fs.readFile(path.join(tplDir, "404.html"), "utf8");
+  const error404Html = renderTemplate(error404Tpl, { basePath: "." });
+  const fullError404Html = renderTemplate(baseTpl, {
+    pageTitle: `404 - ${config.USERNAME}`,
+    basePath: ".",
+    content: error404Html,
+    siteTitle: `${config.USERNAME}'s Blog`,
+    githubUsername: config.GITHUB_USERNAME,
+    cssLinks: buildCssLinks(".", "404"),
+  });
+  await fs.writeFile(path.join(outDir, "404.html"), fullError404Html, "utf8");
+
+  // Generate README.md for GitHub Pages
+  const readmeContent = buildReadmeContent(entries);
+  await fs.writeFile(path.join(outDir, "README.md"), readmeContent, "utf8");
+
+  console.log("页面构建完成。");
+}
+
+function buildArchiveGroups(entries: ListEntry[]): string {
+  const byYear = new Map<string, ListEntry[]>();
+
+  for (const entry of entries) {
+    if (!entry.date) continue;
+    const d = new Date(entry.date);
+    if (Number.isNaN(d.getTime())) continue;
+
+    const year = String(d.getFullYear());
+
+    if (!byYear.has(year)) byYear.set(year, []);
+    byYear.get(year)!.push(entry);
+  }
+
+  const years = Array.from(byYear.keys()).sort((a, b) => Number(b) - Number(a));
+  let html = "";
+
+  for (const year of years) {
+    const posts = byYear.get(year)!;
+    // Sort posts by date (newest first)
+    posts.sort((a, b) => b.dateValue - a.dateValue);
+
+    html += `<div class="archive-year">\n`;
+    html += `  <h2 class="archive-year__title">${year} <span class="archive-year__count">(${posts.length})</span></h2>\n`;
+    html += `  <div class="archive-list">\n`;
+
+    for (const post of posts) {
+      // Format date using dayjs
+      const formattedDate = dayjs(post.date).format("YYYY-MM-DD");
+
+      html += `    <div class="archive-item">\n`;
+      html += `      <span class="archive-item__date">${formattedDate}</span>\n`;
+      html += `      <div class="archive-item__title"><a href="${post.url}">${post.title}</a></div>\n`;
+      html += `    </div>\n`;
+    }
+
+    html += `  </div>\n`;
+    html += `</div>\n`;
+  }
+
+  return html;
+}
+
+function buildReadmeContent(entries: ListEntry[]): string {
+  const siteUrl = `https://${config.GITHUB_USERNAME}.github.io`;
+
+  let readme = `# ${config.USERNAME}'s Blog\n\n`;
+  readme += `🌐 **站点地址**: [${siteUrl}](${siteUrl})\n\n`;
+  readme += `## 📝 文章列表\n\n`;
+
+  if (entries.length === 0) {
+    readme += `暂无文章\n\n`;
+  } else {
+    // Group by year
+    const byYear = new Map<string, ListEntry[]>();
+    for (const entry of entries) {
+      if (!entry.date) continue;
+      const d = new Date(entry.date);
+      if (Number.isNaN(d.getTime())) continue;
+      const year = String(d.getFullYear());
+      if (!byYear.has(year)) byYear.set(year, []);
+      byYear.get(year)!.push(entry);
+    }
+
+    const years = Array.from(byYear.keys()).sort((a, b) => Number(b) - Number(a));
+
+    for (const year of years) {
+      const posts = byYear.get(year)!;
+      posts.sort((a, b) => b.dateValue - a.dateValue);
+
+      readme += `### ${year}\n\n`;
+      for (const post of posts) {
+        const formattedDate = dayjs(post.date).format("YYYY-MM-DD");
+        const postUrl = `${siteUrl}/${post.url.replace("./", "")}`;
+        readme += `- [${post.title}](${postUrl}) - ${formattedDate}\n`;
+      }
+      readme += `\n`;
+    }
+  }
+
+  readme += `---\n\n`;
+  readme += `📦 本站由 [静态博客生成器](${GITHUB_REPO_URL}) 构建\n`;
+
+  return readme;
+}
+
+main().catch((err) => {
+  console.error(err?.stack || err?.message || String(err));
+  process.exit(1);
+});

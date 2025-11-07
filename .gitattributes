@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+*.{js,jsx,ts,tsx,vue,svelte,astro} text eol=lf
+*.{css,less,scss,sass,styl,postcss,pcss} text eol=lf
+*.{json,html,md,yml,yaml,xml} text eol=lf
+*.{svg} text eol=lf
+*.{mdx} text eol=lf
+*.{txt} text eol=lf
+
+*.{ico,png,jpg,jpeg,gif,webp,eot,ttf,woff,woff2,pdf,zip} binary
