@@ -1,6 +1,8 @@
+lefthook: ./node_modules/.bin/lefthook
+
 pre-commit:
   parallel: true
   commands:
-    prettier:
-      run: pnpm format
+    format:
+      run: pnpm prettier --write .
       stage_fixed: true

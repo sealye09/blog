@@ -83,8 +83,25 @@ pnpm build
 
 ### 部署到 GitHub Pages
 
+#### 方法一：自动部署（推荐）
+
 1. 在 GitHub 创建名为 `{username}.github.io` 的仓库
-2. 将生成的文件推送到该仓库：
+2. 确保 `scripts/config.ts` 中的 `GITHUB_USERNAME` 配置正确
+3. 运行构建和部署命令：
+
+```bash
+pnpm deploy # 部署到 GitHub
+```
+
+**注意**：
+
+- `deploy` 命令会强制推送（`git push -f`），本地会覆盖远程仓库
+- 首次部署会自动初始化 Git 仓库并配置远程地址
+- 默认推送到 `main` 分支
+
+#### 方法二：手动部署
+
+如果你想手动控制部署过程：
 
 ```bash
 cd {GITHUB_USERNAME}.github.io
@@ -95,8 +112,10 @@ git remote add origin https://github.com/{username}/{username}.github.io.git
 git push -u origin main
 ```
 
-3. 在仓库设置中启用 GitHub Pages（选择 main 分支）
-4. 访问 `https://{username}.github.io` 查看你的博客
+#### 配置 GitHub Pages
+
+1. 在仓库设置中启用 GitHub Pages（选择 main 分支）
+2. 访问 `https://{username}.github.io` 查看你的博客
 
 ## 📁 项目结构
 
@@ -139,6 +158,9 @@ blog/
 ```bash
 # 构建博客
 pnpm build
+
+# 部署到 GitHub Pages（强制推送）
+pnpm deploy
 
 # 格式化代码
 pnpm format

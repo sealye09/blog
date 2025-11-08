@@ -1,4 +1,3 @@
-import path from "node:path";
 import process from "node:process";
 
 import * as fs from "node:fs/promises";
@@ -8,6 +7,7 @@ import MarkdownIt from "markdown-it";
 import mdAnchor from "markdown-it-anchor";
 import hljs from "highlight.js";
 import dayjs from "dayjs";
+import { join, basename, extname, isAbsolute } from "pathe";
 
 import { config, OUT_DIR, GITHUB_REPO_URL } from "./config.js";
 
@@ -42,8 +42,11 @@ function sanitizeSlug(s: string): string {
 }
 
 async function readMdFiles(fromDir: string): Promise<string[]> {
-  const pattern = path.join(fromDir, "**/*.md").replaceAll("\\", "/");
-  const files = await glob(pattern, { nodir: true });
+  const pattern = join(fromDir, "**/*.md").replaceAll("\\", "/");
+  const files = await glob(pattern, {
+    nodir: true,
+    ignore: ["**/.obsidian/**"],
+  });
   return files.sort();
 }
 
@@ -52,11 +55,18 @@ async function ensureDir(dir: string): Promise<void> {
 }
 
 async function copyAssets(fromDir: string, outDir: string): Promise<void> {
-  const absFrom = path.isAbsolute(fromDir) ? fromDir : path.join(process.cwd(), fromDir);
-  const dest = path.join(outDir, "assets");
+  const absFrom = isAbsolute(fromDir) ? fromDir : join(process.cwd(), fromDir);
+  const dest = join(outDir, "assets");
   await ensureDir(dest);
   try {
-    await fs.cp(absFrom, dest, { recursive: true, force: true });
+    await fs.cp(absFrom, dest, {
+      recursive: true,
+      force: true,
+      filter: (src: string) => {
+        // 忽略 .obsidian 文件夹
+        return !src.includes(".obsidian");
+      },
+    });
   } catch (err: any) {
     if (err?.code === "ENOENT") {
       console.warn(`未找到资源目录：${absFrom}`);
@@ -93,7 +103,7 @@ function normalizeMeta(
   meta: any,
   filePath: string,
 ): PostMeta & { dateCreated?: string; dateModified?: string } {
-  const title: string = meta.title || path.basename(filePath, path.extname(filePath));
+  const title: string = meta.title || basename(filePath, extname(filePath));
   // Support multiple date field names
   const date: string | null = meta.date || meta["date created"] || meta["date modified"] || null;
   const dateCreated: string | undefined = meta["date created"] || meta.date;
@@ -138,12 +148,12 @@ async function main(): Promise<void> {
   const files = await readMdFiles(fromDir);
 
   // Load templates
-  const tplDir = path.join(process.cwd(), "templates");
-  const baseTpl = await fs.readFile(path.join(tplDir, "base.html"), "utf8");
-  const postTpl = await fs.readFile(path.join(tplDir, "post.html"), "utf8");
-  const indexTpl = await fs.readFile(path.join(tplDir, "index.html"), "utf8");
+  const tplDir = join(process.cwd(), "templates");
+  const baseTpl = await fs.readFile(join(tplDir, "base.html"), "utf8");
+  const postTpl = await fs.readFile(join(tplDir, "post.html"), "utf8");
+  const indexTpl = await fs.readFile(join(tplDir, "index.html"), "utf8");
 
-  const postsOutDir = path.join(outDir, postsDir);
+  const postsOutDir = join(outDir, postsDir);
   await ensureDir(postsOutDir);
   await copyAssets(assetsFrom, outDir);
 
@@ -153,8 +163,8 @@ async function main(): Promise<void> {
     const raw = await fs.readFile(file, "utf8");
     const { data, content } = matter(raw);
     const meta = normalizeMeta(data, file);
-    const slugSource = (data as any).slug || meta.title || path.basename(file, path.extname(file));
-    const fallbackSlug = sanitizeSlug(path.basename(file, path.extname(file))) || "post";
+    const slugSource = (data as any).slug || meta.title || basename(file, extname(file));
+    const fallbackSlug = sanitizeSlug(basename(file, extname(file))) || "post";
     const baseSlug = sanitizeSlug(slugSource) || fallbackSlug;
     const html = md.render(content);
 
@@ -184,10 +194,10 @@ async function main(): Promise<void> {
     const relativeSlugPath = slugSegments.join("/");
 
     const postDir =
-      slugSegments.length > 1 ? path.join(postsOutDir, ...slugSegments.slice(0, -1)) : postsOutDir;
+      slugSegments.length > 1 ? join(postsOutDir, ...slugSegments.slice(0, -1)) : postsOutDir;
     await ensureDir(postDir);
 
-    const outFile = path.join(postDir, `${baseSlug}.html`);
+    const outFile = join(postDir, `${baseSlug}.html`);
     const basePath = buildBasePath(directoriesDepth);
 
     let dateHtml = "";
@@ -254,10 +264,10 @@ async function main(): Promise<void> {
     cssLinks: buildCssLinks(".", "index"),
   });
 
-  await fs.writeFile(path.join(outDir, "index.html"), fullIndexHtml, "utf8");
+  await fs.writeFile(join(outDir, "index.html"), fullIndexHtml, "utf8");
 
   // Generate archive page
-  const archiveTpl = await fs.readFile(path.join(tplDir, "archive.html"), "utf8");
+  const archiveTpl = await fs.readFile(join(tplDir, "archive.html"), "utf8");
   const archiveGroups = buildArchiveGroups(entries);
   const archiveHtml = renderTemplate(archiveTpl, { groups: archiveGroups });
   const fullArchiveHtml = renderTemplate(baseTpl, {
@@ -268,10 +278,10 @@ async function main(): Promise<void> {
     githubUsername: config.GITHUB_USERNAME,
     cssLinks: buildCssLinks(".", "archive"),
   });
-  await fs.writeFile(path.join(outDir, "archive.html"), fullArchiveHtml, "utf8");
+  await fs.writeFile(join(outDir, "archive.html"), fullArchiveHtml, "utf8");
 
   // Generate 404 page
-  const error404Tpl = await fs.readFile(path.join(tplDir, "404.html"), "utf8");
+  const error404Tpl = await fs.readFile(join(tplDir, "404.html"), "utf8");
   const error404Html = renderTemplate(error404Tpl, { basePath: "." });
   const fullError404Html = renderTemplate(baseTpl, {
     pageTitle: `404 - ${config.USERNAME}`,
@@ -281,11 +291,11 @@ async function main(): Promise<void> {
     githubUsername: config.GITHUB_USERNAME,
     cssLinks: buildCssLinks(".", "404"),
   });
-  await fs.writeFile(path.join(outDir, "404.html"), fullError404Html, "utf8");
+  await fs.writeFile(join(outDir, "404.html"), fullError404Html, "utf8");
 
   // Generate README.md for GitHub Pages
   const readmeContent = buildReadmeContent(entries);
-  await fs.writeFile(path.join(outDir, "README.md"), readmeContent, "utf8");
+  await fs.writeFile(join(outDir, "README.md"), readmeContent, "utf8");
 
   console.log("页面构建完成。");
 }

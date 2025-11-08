@@ -17,3 +17,63 @@ export const config: BlogConfig = {
 };
 export const OUT_DIR = `${config.GITHUB_USERNAME}.github.io`;
 export const GITHUB_REPO_URL = `https://github.com/${config.GITHUB_USERNAME}/${config.GITHUB_REPO_NAME}`;
+
+/**
+ * 部署配置示例
+ *
+ * 如果你需要自定义部署配置，可以：
+ * 1. 复制此文件为 deploy.config.ts
+ * 2. 修改配置项
+ * 3. 在 deploy.ts 中导入并使用
+ */
+
+export interface DeployConfig {
+  // 目标仓库地址
+  // 支持 HTTPS 和 SSH 格式
+  // HTTPS: https://github.com/username/repo.git
+  // SSH: git@github.com:username/repo.git
+  targetRepo: string;
+
+  // 推送到的分支名称
+  branch: "main" | "master";
+
+  // 提交信息模板
+  // 可以使用变量：{date}, {time}, {datetime}
+  commitMessage: string;
+
+  // 是否启用强制推送
+  // true: 使用 git push -f（覆盖远程）
+  // false: 使用 git push（保留远程历史）
+  forcesPush: boolean;
+}
+
+// 示例配置 1：部署到 GitHub Pages（username.github.io）
+// export const githubPagesConfig: DeployConfig = {
+//   targetRepo: "https://github.com/username/username.github.io.git",
+//   branch: "main",
+//   commitMessage: "Deploy: {datetime}",
+//   forcesPush: true,
+// };
+
+// 示例配置 2：部署到自定义仓库
+// export const customRepoConfig: DeployConfig = {
+//   targetRepo: "https://github.com/username/my-blog.git",
+//   branch: "gh-pages",
+//   commitMessage: "🚀 Auto deploy at {datetime}",
+//   forcesPush: true,
+// };
+
+// 示例配置 3：使用 SSH 方式部署
+// export const sshConfig: DeployConfig = {
+//   targetRepo: "git@github.com:username/username.github.io.git",
+//   branch: "main",
+//   commitMessage: "Deploy: {datetime}",
+//   forcesPush: true,
+// };
+
+export const deployConfig: DeployConfig = {
+  targetRepo: `git@github.com:${config.GITHUB_USERNAME}/${config.GITHUB_USERNAME}.github.io.git`,
+  branch: "main",
+  commitMessage: `Deploy: ${new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}`,
+  forcesPush: true,
+};

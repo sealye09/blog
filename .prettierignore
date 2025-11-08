@@ -1,3 +1,4 @@
 # Build outputs
 node_modules/
 dist/
+.obsidian/

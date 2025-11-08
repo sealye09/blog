@@ -1,12 +1,18 @@
 {
   "name": "blog",
   "version": "1.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "description": "GitHub Pages 静态站点生成",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": "10.20.0"
+  },
+  "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd",
   "scripts": {
     "build": "tsx scripts/blog.ts",
-    "format": "prettier --write .",
+    "format": "prettier --write . && pnpm format",
+    "deploy": "tsx scripts/deploy.ts",
     "prepare": "lefthook install"
   },
   "dependencies": {
@@ -15,19 +21,15 @@
     "gray-matter": "^4.0.3",
     "highlight.js": "^11.10.0",
     "markdown-it": "^14.1.0",
-    "markdown-it-anchor": "^8.6.7"
+    "markdown-it-anchor": "^8.6.7",
+    "pathe": "^2.0.3"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^22.7.5",
     "lefthook": "^1.7.9",
-    "prettier": "^3.3.3",
+    "prettier": "^3.6.2",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
-  },
-  "engines": {
-    "node": ">=22.0.0",
-    "pnpm": ">=8.0.0"
-  },
-  "packageManager": "pnpm@8.0.0"
+  }
 }
