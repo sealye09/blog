@@ -18,11 +18,15 @@ function checkAndClearOutputDir(outDir: string): void {
   } else {
     fs.readdirSync(outDir).forEach((file) => {
       if (file !== ".git") {
-        fs.unlinkSync(join(outDir, file));
+        const filePath = join(outDir, file);
+        const stat = fs.statSync(filePath);
+        if (stat.isDirectory()) {
+          fs.rmSync(filePath, { recursive: true, force: true });
+        } else {
+          fs.unlinkSync(filePath);
+        }
       }
     });
-    fs.rmdirSync(outDir);
-    fs.mkdirSync(outDir);
   }
 }
 
@@ -79,24 +83,45 @@ function deploy(): void {
   gitAddAll(outDir);
 
   // 检查是否有改动
+  let hasChanges = false;
   try {
     const status = execSync("git status --porcelain", {
       cwd: outDir,
       encoding: "utf8",
     });
 
-    if (!status.trim()) {
-      console.log("\n✨ 没有文件改动，跳过提交");
-      return;
+    hasChanges = status.trim() !== "";
+
+    if (!hasChanges) {
+      console.log("\n✨ 没有文件改动");
+      // 检查是否有未推送的提交
+      try {
+        const unpushedCommits = execSync(`git log origin/${deployConfig.branch}..HEAD --oneline`, {
+          cwd: outDir,
+          encoding: "utf8",
+        }).trim();
+
+        if (!unpushedCommits) {
+          console.log("✨ 也没有未推送的提交，跳过部署");
+          return;
+        }
+
+        console.log(`📦 检测到 ${unpushedCommits.split("\n").length} 个未推送的提交`);
+      } catch {
+        // 如果远程分支不存在，继续执行推送
+        console.log("📦 远程分支不存在，将创建新分支");
+      }
     }
   } catch (error: any) {
     console.error(`\n❌ 检查文件改动失败: ${error.message}`);
     process.exit(1);
   }
 
-  // 提交
-  console.log("\n💾 提交更改...");
-  exec(`git commit -m "${deployConfig.commitMessage}"`, outDir);
+  // 如果有改动，则提交
+  if (hasChanges) {
+    console.log("\n💾 提交更改...");
+    exec(`git commit -m "${deployConfig.commitMessage}"`, outDir);
+  }
 
   if (deployConfig.forcesPush) {
     // 强制推送

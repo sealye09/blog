@@ -73,7 +73,7 @@ export interface DeployConfig {
 
 export const deployConfig: DeployConfig = {
   targetRepo: `git@github.com:${config.GITHUB_USERNAME}/${config.GITHUB_USERNAME}.github.io.git`,
-  branch: "main",
+  branch: "master",
   commitMessage: `Deploy: ${new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}`,
   forcesPush: true,
 };

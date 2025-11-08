@@ -12,7 +12,7 @@
   "scripts": {
     "build": "tsx scripts/blog.ts",
     "format": "prettier --write .",
-    "publish": "tsx scripts/deploy.ts",
+    "deploy": "tsx scripts/deploy.ts",
     "prepare": "lefthook install",
     "gen": "tsx scripts/gen.ts",
     "gen:staged": "tsx scripts/gen.ts --staged"
