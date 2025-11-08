@@ -42,6 +42,17 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
   border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.archive-item:hover {
+  border-color: var(--color-orange-600);
+  background: var(--bg-tertiary);
 }
 
 .archive-item__date {
@@ -54,16 +65,7 @@
 .archive-item__title {
   font-size: 1rem;
   line-height: 1.5;
-}
-
-.archive-item__title a {
   color: var(--text-primary);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.archive-item__title a:hover {
-  color: var(--color-orange-600);
 }
 
 /* Desktop Medium (1025px - 1280px) */

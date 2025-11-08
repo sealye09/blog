@@ -168,10 +168,10 @@ function buildArchiveGroups(entries: ListEntry[]): string {
       // Format date using dayjs
       const formattedDate = dayjs(post.date).format("YYYY-MM-DD");
 
-      html += `    <div class="archive-item">\n`;
+      html += `    <a href="${post.url}" class="archive-item">\n`;
       html += `      <span class="archive-item__date">${formattedDate}</span>\n`;
-      html += `      <div class="archive-item__title"><a href="${post.url}">${post.title}</a></div>\n`;
-      html += `    </div>\n`;
+      html += `      <div class="archive-item__title">${post.title}</div>\n`;
+      html += `    </a>\n`;
     }
 
     html += `  </div>\n`;
@@ -331,12 +331,12 @@ async function main(): Promise<void> {
   const itemsHtml = entries
     .map(
       (e) => `
-    <article class="post-item">
-      <h2 class="post-title"><a href="${e.url}">${e.title}</a></h2>
+    <a href="${e.url}" class="post-item">
+      <h2 class="post-title">${e.title}</h2>
       ${e.date ? `<time class="post-date">${dayjs(e.date).format("YYYY-MM-DD")}</time>` : ""}
       ${e.summary ? `<p class="post-summary">${e.summary}</p>` : ""}
-      <a class="post-readmore" href="${e.url}">阅读全文 →</a>
-    </article>
+      <span class="post-readmore">阅读全文 →</span>
+    </a>
   `,
     )
     .join("\n");
