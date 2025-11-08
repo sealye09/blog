@@ -8,6 +8,7 @@
 
 - 🚀 **快速构建**：使用 TypeScript 编写，构建速度快
 - 📝 **Markdown 支持**：使用 Markdown 编写文章，支持 Front Matter 元数据
+- 🤖 **AI 生成摘要**：支持 OpenAI、DeepSeek 等 AI 服务自动生成文章摘要
 - 🎨 **现代设计**：响应式布局，完美适配各种设备
 - 🌓 **主题切换**：支持浅色/深色模式
 - 💡 **代码高亮**：基于 Highlight.js 的代码语法高亮
@@ -20,6 +21,7 @@
 - **Markdown 解析**：markdown-it
 - **代码高亮**：highlight.js
 - **日期处理**：dayjs
+- **AI 集成**：Vercel AI SDK (支持 OpenAI、DeepSeek 等)
 - **包管理**：pnpm
 
 ## 🚀 快速开始
@@ -117,6 +119,58 @@ git push -u origin main
 1. 在仓库设置中启用 GitHub Pages（选择 main 分支）
 2. 访问 `https://{username}.github.io` 查看你的博客
 
+## 🤖 AI 生成摘要
+
+本项目支持使用 AI 自动为文章生成摘要，兼容 OpenAI、DeepSeek 等 OpenAI API 兼容的服务。
+
+### 配置
+
+创建 `.env` 文件并配置以下环境变量：
+
+```bash
+# API 密钥（必需）
+OPENAI_API_KEY=sk-your-api-key-here
+
+# API 端点（可选）
+# OpenAI: 不设置或使用 https://api.openai.com/v1
+# DeepSeek: https://api.deepseek.com
+OPENAI_API_BASE=https://api.deepseek.com
+
+# 模型名称（可选，默认: gpt-3.5-turbo）
+# OpenAI: gpt-3.5-turbo, gpt-4, gpt-4o, gpt-4o-mini
+# DeepSeek: deepseek-chat, deepseek-reasoner
+OPENAI_MODEL=deepseek-chat
+
+# 摘要最大长度（可选，默认: 150）
+AI_SUMMARY_MAX_LENGTH=150
+```
+
+### 使用方法
+
+```bash
+# 为指定文件生成摘要
+pnpm gen __blogs/article1.md __blogs/article2.md
+
+# 使用通配符
+pnpm gen __blogs/*.md
+
+# 为 git 暂存区的文件生成摘要
+pnpm gen --staged
+# 或使用简写
+pnpm gen -s
+# 或使用快捷命令
+pnpm gen:staged
+
+# 查看帮助
+pnpm gen --help
+```
+
+**注意**：
+
+- 必须指定要处理的文件或使用 `--staged` 参数
+- 默认会强制覆盖已有的摘要
+- 生成的摘要会自动写入文章的 Front Matter `summary` 字段
+
 ## 📁 项目结构
 
 ```
@@ -136,8 +190,12 @@ blog/
 │   └── 404.html         # 404 模板
 ├── scripts/              # 构建脚本
 │   ├── blog.ts          # 主构建脚本
+│   ├── deploy.ts        # 部署脚本
+│   ├── gen.ts           # AI 摘要生成（整合 staged 功能）
+│   ├── ai.ts            # AI 通用调用函数
 │   └── config.ts        # 配置文件
 ├── {username}.github.io/ # 生成的网站
+├── .env                  # 环境变量配置（需自行创建）
 └── package.json
 ```
 
@@ -162,6 +220,10 @@ pnpm build
 # 部署到 GitHub Pages（强制推送）
 pnpm deploy
 
+# AI 生成摘要
+pnpm gen <文件...>           # 为指定文件生成摘要
+pnpm gen:staged              # 为 git 暂存区的文件生成摘要
+
 # 格式化代码
 pnpm format
 ```
@@ -179,6 +241,7 @@ MIT License
 - [markdown-it](https://github.com/markdown-it/markdown-it) - Markdown 解析器
 - [highlight.js](https://highlightjs.org/) - 代码高亮
 - [dayjs](https://day.js.org/) - 日期处理库
+- [Vercel AI SDK](https://sdk.vercel.ai/) - AI 集成框架
 
 ---
 
