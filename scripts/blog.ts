@@ -288,8 +288,24 @@ async function main(): Promise<void> {
     const basePath = buildBasePath(directoriesDepth);
 
     let dateHtml = "";
-    if ((meta as any).dateCreated || (meta as any).dateModified) {
+    if (
+      meta.title ||
+      (meta as any).dateCreated ||
+      (meta as any).dateModified ||
+      meta.tags.length > 0 ||
+      meta.summary
+    ) {
       dateHtml = '<div class="post-meta">';
+      if (meta.title) {
+        dateHtml += `<h1 class=\"post-title\">${meta.title}</h1>`;
+      }
+      if (meta.tags.length > 0) {
+        const tagsHtml = meta.tags.map((tag) => `<span class="post-tag">${tag}</span>`).join("");
+        dateHtml += `<div class=\"post-meta__item post-meta__tags\"><span class=\"post-meta__label\">标签：</span><div class=\"post-tags\">${tagsHtml}</div></div>`;
+      }
+      if (meta.summary) {
+        dateHtml += `<div class=\"post-meta__item post-meta__summary\"><span class=\"post-meta__label\">摘要：</span><span class=\"post-summary-text\">${meta.summary}</span></div>`;
+      }
       if ((meta as any).dateCreated) {
         dateHtml += `<div class=\"post-meta__item\"><span class=\"post-meta__label\">创建日期：</span><time>${dayjs((meta as any).dateCreated).format("YYYY-MM-DD")}</time></div>`;
       }
