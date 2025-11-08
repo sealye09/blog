@@ -2,18 +2,7 @@ import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import { join } from "pathe";
 import { config, deployConfig, OUT_DIR } from "./config.js";
-
-function exec(command: string, cwd?: string): void {
-  console.log(`\n执行命令: ${command}`);
-
-  const _cwd = cwd || process.cwd();
-  try {
-    execSync(command, { cwd: _cwd, stdio: "inherit", encoding: "utf8" });
-  } catch (error: any) {
-    console.error(`命令执行失败: ${error.message}`);
-    throw error;
-  }
-}
+import { build, exec, gitAddAll } from "./utils.js";
 
 function checkGitInstalled(): void {
   try {
@@ -39,14 +28,6 @@ function checkAndClearOutputDir(outDir: string): void {
 
 function isGitRepository(dir: string): boolean {
   return fs.existsSync(join(dir, ".git"));
-}
-
-function build(): void {
-  exec("pnpm build", process.cwd());
-}
-
-function formatAndLint(): void {
-  exec("pnpm format", process.cwd());
 }
 
 function deploy(): void {
@@ -92,11 +73,10 @@ function deploy(): void {
 
   // 执行构建和格式化
   build();
-  formatAndLint();
 
   // 添加所有文件
   console.log("\n📝 添加文件到暂存区...");
-  exec("git add -A", outDir);
+  gitAddAll(outDir);
 
   // 检查是否有改动
   try {

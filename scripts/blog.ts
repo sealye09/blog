@@ -10,6 +10,7 @@ import dayjs from "dayjs";
 import { join, basename, extname, isAbsolute } from "pathe";
 
 import { config, OUT_DIR, GITHUB_REPO_URL } from "./config.js";
+import { formatAll } from "./utils.js";
 
 interface PostMeta {
   title: string;
@@ -135,6 +136,92 @@ function buildCssLinks(basePath: string, pageType: string): string {
 function buildBasePath(directoryDepth: number): string {
   const totalLevels = Math.max(directoryDepth + 1, 1);
   return Array(totalLevels).fill("..").join("/");
+}
+
+function buildArchiveGroups(entries: ListEntry[]): string {
+  const byYear = new Map<string, ListEntry[]>();
+
+  for (const entry of entries) {
+    if (!entry.date) continue;
+    const d = new Date(entry.date);
+    if (Number.isNaN(d.getTime())) continue;
+
+    const year = String(d.getFullYear());
+
+    if (!byYear.has(year)) byYear.set(year, []);
+    byYear.get(year)!.push(entry);
+  }
+
+  const years = Array.from(byYear.keys()).sort((a, b) => Number(b) - Number(a));
+  let html = "";
+
+  for (const year of years) {
+    const posts = byYear.get(year)!;
+    // Sort posts by date (newest first)
+    posts.sort((a, b) => b.dateValue - a.dateValue);
+
+    html += `<div class="archive-year">\n`;
+    html += `  <h2 class="archive-year__title">${year} <span class="archive-year__count">(${posts.length})</span></h2>\n`;
+    html += `  <div class="archive-list">\n`;
+
+    for (const post of posts) {
+      // Format date using dayjs
+      const formattedDate = dayjs(post.date).format("YYYY-MM-DD");
+
+      html += `    <div class="archive-item">\n`;
+      html += `      <span class="archive-item__date">${formattedDate}</span>\n`;
+      html += `      <div class="archive-item__title"><a href="${post.url}">${post.title}</a></div>\n`;
+      html += `    </div>\n`;
+    }
+
+    html += `  </div>\n`;
+    html += `</div>\n`;
+  }
+
+  return html;
+}
+
+function buildReadmeContent(entries: ListEntry[]): string {
+  const siteUrl = `https://${config.GITHUB_USERNAME}.github.io`;
+
+  let readme = `# ${config.USERNAME}'s Blog\n\n`;
+  readme += `🌐 **站点地址**: [${siteUrl}](${siteUrl})\n\n`;
+  readme += `## 📝 文章列表\n\n`;
+
+  if (entries.length === 0) {
+    readme += `暂无文章\n\n`;
+  } else {
+    // Group by year
+    const byYear = new Map<string, ListEntry[]>();
+    for (const entry of entries) {
+      if (!entry.date) continue;
+      const d = new Date(entry.date);
+      if (Number.isNaN(d.getTime())) continue;
+      const year = String(d.getFullYear());
+      if (!byYear.has(year)) byYear.set(year, []);
+      byYear.get(year)!.push(entry);
+    }
+
+    const years = Array.from(byYear.keys()).sort((a, b) => Number(b) - Number(a));
+
+    for (const year of years) {
+      const posts = byYear.get(year)!;
+      posts.sort((a, b) => b.dateValue - a.dateValue);
+
+      readme += `### ${year}\n\n`;
+      for (const post of posts) {
+        const formattedDate = dayjs(post.date).format("YYYY-MM-DD");
+        const postUrl = `${siteUrl}/${post.url.replace("./", "")}`;
+        readme += `- [${post.title}](${postUrl}) - ${formattedDate}\n`;
+      }
+      readme += `\n`;
+    }
+  }
+
+  readme += `---\n\n`;
+  readme += `📦 本站由 [静态博客生成器](${GITHUB_REPO_URL}) 构建\n`;
+
+  return readme;
 }
 
 async function main(): Promise<void> {
@@ -298,92 +385,9 @@ async function main(): Promise<void> {
   await fs.writeFile(join(outDir, "README.md"), readmeContent, "utf8");
 
   console.log("页面构建完成。");
-}
 
-function buildArchiveGroups(entries: ListEntry[]): string {
-  const byYear = new Map<string, ListEntry[]>();
-
-  for (const entry of entries) {
-    if (!entry.date) continue;
-    const d = new Date(entry.date);
-    if (Number.isNaN(d.getTime())) continue;
-
-    const year = String(d.getFullYear());
-
-    if (!byYear.has(year)) byYear.set(year, []);
-    byYear.get(year)!.push(entry);
-  }
-
-  const years = Array.from(byYear.keys()).sort((a, b) => Number(b) - Number(a));
-  let html = "";
-
-  for (const year of years) {
-    const posts = byYear.get(year)!;
-    // Sort posts by date (newest first)
-    posts.sort((a, b) => b.dateValue - a.dateValue);
-
-    html += `<div class="archive-year">\n`;
-    html += `  <h2 class="archive-year__title">${year} <span class="archive-year__count">(${posts.length})</span></h2>\n`;
-    html += `  <div class="archive-list">\n`;
-
-    for (const post of posts) {
-      // Format date using dayjs
-      const formattedDate = dayjs(post.date).format("YYYY-MM-DD");
-
-      html += `    <div class="archive-item">\n`;
-      html += `      <span class="archive-item__date">${formattedDate}</span>\n`;
-      html += `      <div class="archive-item__title"><a href="${post.url}">${post.title}</a></div>\n`;
-      html += `    </div>\n`;
-    }
-
-    html += `  </div>\n`;
-    html += `</div>\n`;
-  }
-
-  return html;
-}
-
-function buildReadmeContent(entries: ListEntry[]): string {
-  const siteUrl = `https://${config.GITHUB_USERNAME}.github.io`;
-
-  let readme = `# ${config.USERNAME}'s Blog\n\n`;
-  readme += `🌐 **站点地址**: [${siteUrl}](${siteUrl})\n\n`;
-  readme += `## 📝 文章列表\n\n`;
-
-  if (entries.length === 0) {
-    readme += `暂无文章\n\n`;
-  } else {
-    // Group by year
-    const byYear = new Map<string, ListEntry[]>();
-    for (const entry of entries) {
-      if (!entry.date) continue;
-      const d = new Date(entry.date);
-      if (Number.isNaN(d.getTime())) continue;
-      const year = String(d.getFullYear());
-      if (!byYear.has(year)) byYear.set(year, []);
-      byYear.get(year)!.push(entry);
-    }
-
-    const years = Array.from(byYear.keys()).sort((a, b) => Number(b) - Number(a));
-
-    for (const year of years) {
-      const posts = byYear.get(year)!;
-      posts.sort((a, b) => b.dateValue - a.dateValue);
-
-      readme += `### ${year}\n\n`;
-      for (const post of posts) {
-        const formattedDate = dayjs(post.date).format("YYYY-MM-DD");
-        const postUrl = `${siteUrl}/${post.url.replace("./", "")}`;
-        readme += `- [${post.title}](${postUrl}) - ${formattedDate}\n`;
-      }
-      readme += `\n`;
-    }
-  }
-
-  readme += `---\n\n`;
-  readme += `📦 本站由 [静态博客生成器](${GITHUB_REPO_URL}) 构建\n`;
-
-  return readme;
+  formatAll();
+  console.log("代码格式化完成。");
 }
 
 main().catch((err) => {
