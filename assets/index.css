@@ -54,15 +54,15 @@
   font-size: 0.9375rem;
 }
 
-/* Tablet (≤ 1024px) */
-@media (max-width: 1024px) {
+/* 中等屏幕 (≥ 1024px) */
+@media (min-width: 1024px) {
   .post-list {
     max-width: 860px;
   }
 }
 
-/* Mobile (≤ 767px) */
-@media (max-width: 767px) {
+/* 小屏幕 (≥ 768px) */
+@media (min-width: 768px) {
   .post-list {
     gap: 1rem;
   }
@@ -85,8 +85,8 @@
   }
 }
 
-/* Small Mobile (≤ 479px) */
-@media (max-width: 479px) {
+/* 超小屏幕 (≤ 639px) */
+@media (max-width: 639px) {
   .post-item {
     padding: 1rem;
     border-radius: 6px;

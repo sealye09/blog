@@ -4,6 +4,54 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{{pageTitle}}</title>
+
+    <!-- SEO 优化 -->
+    <meta name="description" content="{{pageDescription}}" />
+    <meta name="keywords" content="{{pageKeywords}}" />
+    <meta name="author" content="{{siteAuthor}}" />
+    <meta name="robots" content="index,follow" />
+    <meta name="googlebot" content="index,follow" />
+    <meta name="baidu-verification" content="{{baiduVerification}}" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="{{ogType}}" />
+    <meta property="og:title" content="{{pageTitle}}" />
+    <meta property="og:description" content="{{pageDescription}}" />
+    <meta property="og:url" content="{{pageUrl}}" />
+    <meta property="og:site_name" content="{{siteTitle}}" />
+    <meta property="og:locale" content="zh_CN" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{pageTitle}}" />
+    <meta name="twitter:description" content="{{pageDescription}}" />
+    <meta name="twitter:creator" content="{{twitterCreator}}" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{pageUrl}}" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{basePath}}/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{{basePath}}/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{basePath}}/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="{{basePath}}/favicon-16x16.png" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "name": "{{siteTitle}}",
+        "description": "{{siteDescription}}",
+        "url": "{{siteUrl}}",
+        "author": {
+          "@type": "Person",
+          "name": "{{siteAuthor}}"
+        },
+        "inLanguage": "zh-CN"
+      }
+    </script>
+
     <script>
       (function () {
         try {
@@ -88,8 +136,106 @@
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
             </svg>
           </button>
+          <!-- 移动端菜单按钮 -->
+          <button
+            class="mobile-menu-toggle"
+            aria-label="切换菜单"
+            aria-controls="mobile-menu"
+            aria-expanded="false"
+          >
+            <!-- 汉堡菜单图标 -->
+            <svg
+              class="menu-icon-open"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M3 6h18M3 12h18M3 18h18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                fill="none"
+              />
+            </svg>
+            <!-- 关闭图标 -->
+            <svg
+              class="menu-icon-close"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+              style="display: none"
+            >
+              <path
+                d="M18 6L6 18M6 6l12 12"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                fill="none"
+              />
+            </svg>
+          </button>
         </div>
       </div>
+      <!-- 移动端菜单 -->
+      <nav class="mobile-menu" id="mobile-menu" aria-label="移动端导航">
+        <div class="mobile-menu-section">
+          <a class="mobile-nav__link" href="{{basePath}}/index.html">首页</a>
+          <a class="mobile-nav__link" href="{{basePath}}/archive.html">归档</a>
+        </div>
+        <div class="mobile-menu-section mobile-menu-actions">
+          <a
+            href="https://github.com/{{githubUsername}}"
+            class="mobile-action-link"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+            data-username="{{githubUsername}}"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path
+                d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"
+              />
+            </svg>
+            <span>GitHub</span>
+          </a>
+          <button id="mobile-theme-toggle" class="mobile-action-button" aria-label="切换主题">
+            <svg
+              class="icon-sun"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z" />
+              <path
+                d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"
+                stroke="currentColor"
+                stroke-width="1.5"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+            <svg
+              class="icon-moon"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+            </svg>
+            <span>主题</span>
+          </button>
+        </div>
+      </nav>
     </header>
     <main class="site-main container">{{content}}</main>
     <footer class="site-footer">
@@ -100,7 +246,10 @@
     <script>
       (function () {
         var btn = document.getElementById("theme-toggle");
-        if (!btn) return;
+        var mobileBtn = document.getElementById("mobile-theme-toggle");
+
+        if (!btn && !mobileBtn) return;
+
         function setTheme(theme) {
           document.documentElement.setAttribute("data-theme", theme);
           try {
@@ -111,6 +260,7 @@
             meta.setAttribute("content", theme === "dark" ? "#0a0a0a" : "#ffffff");
           }
         }
+
         function withNoTransitions(fn) {
           var root = document.documentElement;
           root.classList.add("disable-transitions");
@@ -122,12 +272,90 @@
             }, 0);
           }
         }
-        btn.addEventListener("click", function () {
+
+        function handleThemeToggle() {
           var current = document.documentElement.getAttribute("data-theme") || "light";
           var next = current === "light" ? "dark" : "light";
           withNoTransitions(function () {
             setTheme(next);
           });
+        }
+
+        if (btn) {
+          btn.addEventListener("click", handleThemeToggle);
+        }
+
+        if (mobileBtn) {
+          mobileBtn.addEventListener("click", handleThemeToggle);
+        }
+      })();
+    </script>
+    <script>
+      (function () {
+        // 移动端菜单功能
+        var menuToggle = document.querySelector(".mobile-menu-toggle");
+        var mobileMenu = document.querySelector(".mobile-menu");
+        var header = document.querySelector(".site-header");
+
+        if (!menuToggle || !mobileMenu) return;
+
+        // 切换菜单状态
+        function toggleMenu() {
+          var isExpanded = menuToggle.getAttribute("aria-expanded") === "true";
+          menuToggle.setAttribute("aria-expanded", !isExpanded);
+          mobileMenu.classList.toggle("active");
+
+          // 切换图标
+          var openIcon = menuToggle.querySelector(".menu-icon-open");
+          var closeIcon = menuToggle.querySelector(".menu-icon-close");
+
+          if (isExpanded) {
+            openIcon.style.display = "block";
+            closeIcon.style.display = "none";
+          } else {
+            openIcon.style.display = "none";
+            closeIcon.style.display = "block";
+          }
+
+          // 添加header的active状态用于样式控制
+          if (!isExpanded) {
+            header.classList.add("mobile-menu-open");
+            document.body.classList.add("mobile-menu-open");
+          } else {
+            header.classList.remove("mobile-menu-open");
+            document.body.classList.remove("mobile-menu-open");
+          }
+        }
+
+        // 点击菜单按钮
+        menuToggle.addEventListener("click", function (e) {
+          e.stopPropagation();
+          toggleMenu();
+        });
+
+        // 点击菜单外部关闭菜单
+        document.addEventListener("click", function (e) {
+          if (
+            mobileMenu.classList.contains("active") &&
+            !mobileMenu.contains(e.target) &&
+            !menuToggle.contains(e.target)
+          ) {
+            toggleMenu();
+          }
+        });
+
+        // 窗口大小改变时关闭菜单
+        window.addEventListener("resize", function () {
+          if (window.innerWidth > 768 && mobileMenu.classList.contains("active")) {
+            toggleMenu();
+          }
+        });
+
+        // ESC键关闭菜单
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && mobileMenu.classList.contains("active")) {
+            toggleMenu();
+          }
         });
       })();
     </script>

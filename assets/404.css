@@ -72,8 +72,8 @@
   transform: translateY(-2px);
 }
 
-/* Mobile (≤ 767px) */
-@media (max-width: 767px) {
+/* Mobile (≤ 768px) */
+@media (max-width: 768px) {
   .error-page {
     padding: 3rem 1rem;
   }
@@ -100,8 +100,8 @@
   }
 }
 
-/* Small Mobile (≤ 479px) */
-@media (max-width: 479px) {
+/* Small Mobile (≤ 639px) */
+@media (max-width: 639px) {
   .error-page {
     padding: 3rem 0.75rem;
   }

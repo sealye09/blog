@@ -97,8 +97,8 @@
   }
 }
 
-/* Mobile (≤ 767px) */
-@media (max-width: 767px) {
+/* Mobile (≤ 768px) */
+@media (max-width: 768px) {
   .archive-year {
     margin-bottom: 2rem;
   }
@@ -132,8 +132,8 @@
   }
 }
 
-/* Small Mobile (≤ 479px) */
-@media (max-width: 479px) {
+/* Small Mobile (≤ 639px) */
+@media (max-width: 639px) {
   .archive-year__title {
     font-size: 1.125rem;
   }

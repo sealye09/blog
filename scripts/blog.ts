@@ -324,6 +324,15 @@ async function main(): Promise<void> {
 
     const fullHtml = renderTemplate(baseTpl, {
       pageTitle: meta.title,
+      pageDescription: meta.summary || `${meta.title} - ${config.USERNAME}'s Blog`,
+      pageKeywords: meta.tags?.join(", ") || "技术,博客,编程",
+      siteAuthor: config.USERNAME,
+      baiduVerification: process.env.BAIDU_VERIFICATION || "",
+      ogType: "article",
+      pageUrl: `https://${config.GITHUB_USERNAME}.github.io/${postsDir}/${relativeSlugPath}.html`,
+      twitterCreator: `@${config.GITHUB_USERNAME}`,
+      siteDescription: `${config.USERNAME}'s Blog - 分享技术见解和编程经验`,
+      siteUrl: `https://${config.GITHUB_USERNAME}.github.io`,
       basePath,
       content: postHtml,
       siteTitle: `${config.USERNAME}'s Blog`,
@@ -359,7 +368,16 @@ async function main(): Promise<void> {
 
   const indexHtml = renderTemplate(indexTpl, { items: itemsHtml });
   const fullIndexHtml = renderTemplate(baseTpl, {
-    pageTitle: config.USERNAME,
+    pageTitle: `${config.USERNAME} - 博客首页`,
+    pageDescription: `${config.USERNAME}的个人技术博客，分享编程经验和见解`,
+    pageKeywords: "技术,博客,编程,前端,后端",
+    siteAuthor: config.USERNAME,
+    baiduVerification: process.env.BAIDU_VERIFICATION || "",
+    ogType: "website",
+    pageUrl: `https://${config.GITHUB_USERNAME}.github.io`,
+    twitterCreator: `@${config.GITHUB_USERNAME}`,
+    siteDescription: `${config.USERNAME}'s Blog - 分享技术见解和编程经验`,
+    siteUrl: `https://${config.GITHUB_USERNAME}.github.io`,
     basePath: ".",
     content: indexHtml,
     siteTitle: `${config.USERNAME}'s Blog`,
@@ -375,6 +393,15 @@ async function main(): Promise<void> {
   const archiveHtml = renderTemplate(archiveTpl, { groups: archiveGroups });
   const fullArchiveHtml = renderTemplate(baseTpl, {
     pageTitle: `归档 - ${config.USERNAME}`,
+    pageDescription: `${config.USERNAME}的博客归档页面，按时间顺序查看所有文章`,
+    pageKeywords: "归档,博客,文章列表",
+    siteAuthor: config.USERNAME,
+    baiduVerification: process.env.BAIDU_VERIFICATION || "",
+    ogType: "website",
+    pageUrl: `https://${config.GITHUB_USERNAME}.github.io/archive.html`,
+    twitterCreator: `@${config.GITHUB_USERNAME}`,
+    siteDescription: `${config.USERNAME}'s Blog - 分享技术见解和编程经验`,
+    siteUrl: `https://${config.GITHUB_USERNAME}.github.io`,
     basePath: ".",
     content: archiveHtml,
     siteTitle: `${config.USERNAME}'s Blog`,
@@ -387,7 +414,16 @@ async function main(): Promise<void> {
   const error404Tpl = await fs.readFile(join(tplDir, "404.html"), "utf8");
   const error404Html = renderTemplate(error404Tpl, { basePath: "." });
   const fullError404Html = renderTemplate(baseTpl, {
-    pageTitle: `404 - ${config.USERNAME}`,
+    pageTitle: `404 - 页面未找到`,
+    pageDescription: "抱歉，您访问的页面不存在",
+    pageKeywords: "404,页面未找到,错误页面",
+    siteAuthor: config.USERNAME,
+    baiduVerification: process.env.BAIDU_VERIFICATION || "",
+    ogType: "website",
+    pageUrl: `https://${config.GITHUB_USERNAME}.github.io/404.html`,
+    twitterCreator: `@${config.GITHUB_USERNAME}`,
+    siteDescription: `${config.USERNAME}'s Blog - 分享技术见解和编程经验`,
+    siteUrl: `https://${config.GITHUB_USERNAME}.github.io`,
     basePath: ".",
     content: error404Html,
     siteTitle: `${config.USERNAME}'s Blog`,
