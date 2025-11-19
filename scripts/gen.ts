@@ -1,10 +1,14 @@
-import process from "node:process";
+import "dotenv/config";
+
 import { execSync } from "node:child_process";
 import * as fs from "node:fs/promises";
+import process from "node:process";
+
 import matter from "gray-matter";
 import { basename, extname } from "pathe";
+
+import { log } from "../utils/logger.js";
 import { generateSummary } from "./ai.js";
-import "dotenv/config";
 
 interface GenerateSummaryOptions {
   maxLength?: number;
@@ -36,7 +40,7 @@ function getStagedMarkdownFiles(): string[] {
 
     return files;
   } catch (error: any) {
-    console.error("❌ 获取 git 暂存文件失败:", error.message);
+    log.error("获取 git 暂存文件失败: " + error.message);
     return [];
   }
 }
@@ -66,7 +70,7 @@ async function analyzeFiles(
         currentSummary,
       });
     } catch (error: any) {
-      console.warn(`⚠️  无法读取文件 ${file}: ${error.message}`);
+      log.warn(`无法读取文件 ${file}: ${error.message}`);
       skipped++;
     }
   }
@@ -99,26 +103,25 @@ async function generateSummaries(options: GenerateSummaryOptions = {}): Promise<
 
   if (staged) {
     // 处理 git 暂存区的文件
-    console.log("🔍 检查 git 暂存区的 Markdown 文件...\n");
+    log.info("🔍 检查 git 暂存区的 Markdown 文件...\n");
 
     files = getStagedMarkdownFiles();
 
     if (files.length === 0) {
-      console.log("ℹ️  暂存区没有 Markdown 文件");
+      log.info("ℹ️  暂存区没有 Markdown 文件");
       return;
     }
 
-    console.log(`📝 找到 ${files.length} 个暂存的 Markdown 文件:`);
-    files.forEach((file) => console.log(`   - ${file}`));
-    console.log();
+    log.info(`📝 找到 ${files.length} 个暂存的 Markdown 文件:`);
+    files.forEach((file) => log.info(`   - ${file}`));
   } else {
     // 处理指定的文件
     if (!specificFiles || specificFiles.length === 0) {
-      console.error("❌ 错误：必须指定要处理的 Markdown 文件或使用 --staged 参数\n");
-      console.log("使用方法:");
-      console.log("  pnpm gen file1.md file2.md         # 为指定文件生成摘要");
-      console.log("  pnpm gen --staged                  # 为 git 暂存区的文件生成摘要");
-      console.log("  pnpm gen --help                    # 查看完整帮助\n");
+      log.error("❌ 错误：必须指定要处理的 Markdown 文件或使用 --staged 参数\n");
+      log.info("使用方法:");
+      log.info("  pnpm gen file1.md file2.md         # 为指定文件生成摘要");
+      log.info("  pnpm gen --staged                  # 为 git 暂存区的文件生成摘要");
+      log.info("  pnpm gen --help                    # 查看完整帮助\n");
       process.exit(1);
     }
 
@@ -126,29 +129,29 @@ async function generateSummaries(options: GenerateSummaryOptions = {}): Promise<
     files = specificFiles.filter((f) => f.endsWith(".md")).sort();
 
     if (files.length === 0) {
-      console.log("❌ 指定的文件中没有 Markdown 文件");
+      log.info("❌ 指定的文件中没有 Markdown 文件");
       return;
     }
 
-    console.log(`📁 指定处理 ${files.length} 个 Markdown 文件`);
+    log.info(`📁 指定处理 ${files.length} 个 Markdown 文件`);
   }
 
-  console.log("🚀 开始分析博客文件...");
-  console.log("ℹ️  将强制重新生成摘要\n");
+  log.info("🚀 开始分析博客文件...");
+  log.info("ℹ️  将强制重新生成摘要\n");
 
   // 分析文件
   const { needsGeneration, skipped } = await analyzeFiles(files);
 
   if (skipped > 0) {
-    console.log(`⚠️  跳过 ${skipped} 个无法读取的文件\n`);
+    log.info(`⚠️  跳过 ${skipped} 个无法读取的文件\n`);
   }
 
   if (needsGeneration.length === 0) {
-    console.log("❌ 没有可处理的文件");
+    log.info("❌ 没有可处理的文件");
     return;
   }
 
-  console.log(`🤖 需要生成摘要的文件: ${needsGeneration.length} 个\n`);
+  log.info(`🤖 需要生成摘要的文件: ${needsGeneration.length} 个\n`);
 
   // 生成摘要
   let successCount = 0;
@@ -159,14 +162,14 @@ async function generateSummaries(options: GenerateSummaryOptions = {}): Promise<
     const progress = `[${i + 1}/${needsGeneration.length}]`;
 
     try {
-      console.log(`${progress} 正在处理: ${file.title}`);
+      log.info(`${progress} 正在处理: ${file.title}`);
 
       const summary = await generateSummary(file.content, file.title, maxLength);
 
       await updateFileSummary(file.path, summary);
 
-      console.log(`✅ ${progress} 生成成功`);
-      console.log(`   摘要: ${summary}\n`);
+      log.info(`✅ ${progress} 生成成功`);
+      log.info(`   摘要: ${summary}\n`);
 
       successCount++;
 
@@ -175,26 +178,26 @@ async function generateSummaries(options: GenerateSummaryOptions = {}): Promise<
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     } catch (error: any) {
-      console.error(`❌ ${progress} 生成失败: ${file.title}`);
-      console.error(`   错误: ${error.message}\n`);
+      log.error(`❌ ${progress} 生成失败: ${file.title}`);
+      log.error(`   错误: ${error.message}\n`);
       failCount++;
     }
   }
 
   // 输出统计信息
-  console.log("\n" + "=".repeat(60));
-  console.log("📊 生成统计:");
-  console.log(`   ✅ 成功: ${successCount} 个`);
-  console.log(`   ❌ 失败: ${failCount} 个`);
-  console.log(`   ⏭️  跳过: ${skipped} 个`);
-  console.log(`   📝 总计: ${files.length} 个`);
-  console.log("=".repeat(60) + "\n");
+  log.info("\n" + "=".repeat(60));
+  log.info("📊 生成统计:");
+  log.info(`   ✅ 成功: ${successCount} 个`);
+  log.info(`   ❌ 失败: ${failCount} 个`);
+  log.info(`   ⏭️  跳过: ${skipped} 个`);
+  log.info(`   📝 总计: ${files.length} 个`);
+  log.info("=".repeat(60) + "\n");
 
   if (failCount > 0) {
-    console.log("⚠️  有部分文件生成失败，请检查错误信息并重试。");
+    log.info("⚠️  有部分文件生成失败，请检查错误信息并重试。");
     process.exit(1);
   } else {
-    console.log("🎉 所有摘要生成完成！");
+    log.info("🎉 所有摘要生成完成！");
   }
 }
 
@@ -208,7 +211,7 @@ function parseArgs(): GenerateSummaryOptions {
 
   for (const arg of args) {
     if (arg === "--help" || arg === "-h") {
-      console.log(`
+      log.info(`
 使用方法: pnpm gen [选项] [文件...]
 
 参数:
@@ -270,7 +273,7 @@ function parseArgs(): GenerateSummaryOptions {
 const options = parseArgs();
 
 generateSummaries(options).catch((err) => {
-  console.error("\n❌ 发生错误:");
-  console.error(err?.stack || err?.message || String(err));
+  log.error("\n❌ 发生错误:");
+  log.error(err?.stack || err?.message || String(err));
   process.exit(1);
 });

@@ -1,3 +1,5 @@
+import { ECMA } from "terser";
+
 export interface BlogConfig {
   FROM_DIR: string;
   POSTS_DIR: string;
@@ -17,6 +19,75 @@ export const config: BlogConfig = {
 };
 export const OUT_DIR = `${config.GITHUB_USERNAME}.github.io`;
 export const GITHUB_REPO_URL = `https://github.com/${config.GITHUB_USERNAME}/${config.GITHUB_REPO_NAME}`;
+
+// 产物优化配置
+export interface OptimizeConfig {
+  css: {
+    enabled: boolean;
+    minify: boolean;
+    removeUnused: boolean;
+    target: "browsers" | "node" | "custom";
+    analyze: boolean;
+  };
+  js: {
+    enabled: boolean;
+    compress: boolean;
+    mangle: boolean;
+    removeConsole: boolean;
+    removeDebugger: boolean;
+    ecma: ECMA;
+    analyze: boolean;
+  };
+  html: {
+    enabled: boolean;
+    minify: boolean;
+    removeComments: boolean;
+    collapseWhitespace: boolean;
+    removeAttributeQuotes: boolean;
+    removeEmptyAttributes: boolean;
+    removeOptionalTags: boolean;
+    analyze: boolean;
+  };
+  general: {
+    generateReport: boolean;
+    reportPath: string;
+    verboseOutput: boolean;
+  };
+}
+
+export const optimizeConfig: OptimizeConfig = {
+  css: {
+    enabled: true,
+    minify: true,
+    removeUnused: true,
+    target: "browsers",
+    analyze: false,
+  },
+  js: {
+    enabled: true,
+    compress: true,
+    mangle: true,
+    removeConsole: true,
+    removeDebugger: true,
+    ecma: 2015,
+    analyze: false,
+  },
+  html: {
+    enabled: true,
+    minify: true,
+    removeComments: true,
+    collapseWhitespace: true,
+    removeAttributeQuotes: true,
+    removeEmptyAttributes: true,
+    removeOptionalTags: true,
+    analyze: false,
+  },
+  general: {
+    generateReport: false,
+    reportPath: "./optimization-report.json",
+    verboseOutput: false,
+  },
+};
 
 /**
  * 部署配置示例

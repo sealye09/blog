@@ -1,16 +1,16 @@
 import process from "node:process";
 
-import * as fs from "node:fs/promises";
+import dayjs from "dayjs";
 import { glob } from "glob";
 import matter from "gray-matter";
+import hljs from "highlight.js";
 import MarkdownIt from "markdown-it";
 import mdAnchor from "markdown-it-anchor";
-import hljs from "highlight.js";
-import dayjs from "dayjs";
-import { join, basename, extname, isAbsolute } from "pathe";
+import * as fs from "node:fs/promises";
+import { basename, extname, isAbsolute, join } from "pathe";
 
-import { config, OUT_DIR, GITHUB_REPO_URL } from "./config.js";
-import { formatAll } from "./utils.js";
+import { log } from "../utils/logger.js";
+import { config, GITHUB_REPO_URL, OUT_DIR } from "./config.js";
 
 interface PostMeta {
   title: string;
@@ -70,7 +70,7 @@ async function copyAssets(fromDir: string, outDir: string): Promise<void> {
     });
   } catch (err: any) {
     if (err?.code === "ENOENT") {
-      console.warn(`未找到资源目录：${absFrom}`);
+      log.warn(`未找到资源目录：${absFrom}`);
       return;
     }
     throw err;
@@ -436,13 +436,23 @@ async function main(): Promise<void> {
   const readmeContent = buildReadmeContent(entries);
   await fs.writeFile(join(outDir, "README.md"), readmeContent, "utf8");
 
-  console.log("页面构建完成。");
+  log.info("页面构建完成。");
 
-  formatAll();
-  console.log("代码格式化完成。");
+  // 优化构建产物
+  log.info("开始优化构建产物...");
+  try {
+    const { runOptimization } = await import("./optimize-build.js");
+    await runOptimization(false); // 不使用详细输出，避免干扰构建过程
+    log.info("构建产物优化完成。");
+  } catch (error) {
+    log.warn("构建产物优化失败，但构建已完成", error);
+  }
+
+  // formatAll();
+  // console.log("代码格式化完成。");
 }
 
 main().catch((err) => {
-  console.error(err?.stack || err?.message || String(err));
+  log.error(err?.stack || err?.message || String(err));
   process.exit(1);
 });

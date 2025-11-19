@@ -1,10 +1,9 @@
 ---
 title: 001_使用 TaroJS 提供的能力渲染富文本
 summary: >-
-  使用 TaroJS 渲染富文本：通过 dangerouslySetInnerHTML 渲染 HTML 字符串，添加样式，修复小程序 span
-  渲染问题，并支持事件绑定。
+  使用TaroJS渲染富文本：通过dangerouslySetInnerHTML展示HTML内容，添加基础样式，修复微信小程序span渲染问题，并支持事件绑定。包含代码示例和常见问题解决方案。
 date created: 2025-11-08T00:13:23+08:00
-date modified: 2025-11-08T13:40:55+08:00
+date modified: 2025-11-19T13:40:55+08:00
 tags:
   - 富文本
   - Taro

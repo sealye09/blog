@@ -1,6 +1,9 @@
 import { execSync } from "node:child_process";
 import * as fs from "node:fs";
+
 import { join } from "pathe";
+
+import { log } from "../utils/logger.js";
 import { config, deployConfig, OUT_DIR } from "./config.js";
 import { build, exec, gitAddAll } from "./utils.js";
 
@@ -35,7 +38,7 @@ function isGitRepository(dir: string): boolean {
 }
 
 function deploy(): void {
-  console.log("🚀 开始部署博客...\n");
+  log.info("开始部署博客...");
 
   // 检查 Git 是否安装
   checkGitInstalled();
@@ -46,11 +49,11 @@ function deploy(): void {
   // 检查是否为 Git 仓库，如果不是则初始化
   const isGitInitialized = isGitRepository(outDir);
   if (!isGitInitialized) {
-    console.log("📦 初始化 Git 仓库...");
+    log.info("初始化 Git 仓库...");
     exec("git init", outDir);
     exec(`git remote add origin ${deployConfig.targetRepo}`, outDir);
   } else {
-    console.log("✅ Git 仓库已存在");
+    log.info("Git 仓库已存在");
     // 检查并更新 origin
     try {
       const currentOrigin = execSync("git remote get-url origin", {
@@ -59,11 +62,11 @@ function deploy(): void {
       }).trim();
 
       if (currentOrigin !== deployConfig.targetRepo) {
-        console.log(`🔄 更新远程仓库地址...`);
+        log.info("更新远程仓库地址...");
         exec(`git remote set-url origin ${deployConfig.targetRepo}`, outDir);
       }
     } catch {
-      console.log("📌 添加远程仓库...");
+      log.info("添加远程仓库...");
       exec(`git remote add origin ${deployConfig.targetRepo}`, outDir);
     }
   }
@@ -79,7 +82,7 @@ function deploy(): void {
   build();
 
   // 添加所有文件
-  console.log("\n📝 添加文件到暂存区...");
+  log.info("添加文件到暂存区...");
   gitAddAll(outDir);
 
   // 检查是否有改动
@@ -93,7 +96,7 @@ function deploy(): void {
     hasChanges = status.trim() !== "";
 
     if (!hasChanges) {
-      console.log("\n✨ 没有文件改动");
+      log.info("没有文件改动");
       // 检查是否有未推送的提交
       try {
         const unpushedCommits = execSync(`git log origin/${deployConfig.branch}..HEAD --oneline`, {
@@ -102,52 +105,52 @@ function deploy(): void {
         }).trim();
 
         if (!unpushedCommits) {
-          console.log("✨ 也没有未推送的提交，跳过部署");
+          log.info("也没有未推送的提交，跳过部署");
           return;
         }
 
-        console.log(`📦 检测到 ${unpushedCommits.split("\n").length} 个未推送的提交`);
+        log.info(`检测到 ${unpushedCommits.split("\n").length} 个未推送的提交`);
       } catch {
         // 如果远程分支不存在，继续执行推送
-        console.log("📦 远程分支不存在，将创建新分支");
+        log.info("远程分支不存在，将创建新分支");
       }
     }
   } catch (error: any) {
-    console.error(`\n❌ 检查文件改动失败: ${error.message}`);
+    log.error(`检查文件改动失败: ${error.message}`);
     process.exit(1);
   }
 
   // 如果有改动，则提交
   if (hasChanges) {
-    console.log("\n💾 提交更改...");
+    log.info("提交更改...");
     exec(`git commit -m "${deployConfig.commitMessage}"`, outDir);
   }
 
   if (deployConfig.forcesPush) {
     // 强制推送
-    console.log("\n🚢 强制推送到远程仓库...");
-    console.log(`目标仓库: ${deployConfig.targetRepo}`);
-    console.log(`分支: ${deployConfig.branch}`);
-    console.log(`⚠️  即将执行强制推送（会覆盖远程仓库）...`);
+    log.info("强制推送到远程仓库...");
+    log.info(`目标仓库: ${deployConfig.targetRepo}`);
+    log.info(`分支: ${deployConfig.branch}`);
+    log.warn("即将执行强制推送（会覆盖远程仓库）...");
 
     exec(`git push -f origin ${deployConfig.branch}`, outDir);
   } else {
     // 普通推送
-    console.log("\n🚢 推送到远程仓库...");
-    console.log(`目标仓库: ${deployConfig.targetRepo}`);
-    console.log(`分支: ${deployConfig.branch}`);
-    console.log(`⚠️  即将执行普通推送（会保留远程仓库历史）...`);
+    log.info("推送到远程仓库...");
+    log.info(`目标仓库: ${deployConfig.targetRepo}`);
+    log.info(`分支: ${deployConfig.branch}`);
+    log.info("即将执行普通推送（会保留远程仓库历史）...");
 
     exec(`git push origin ${deployConfig.branch}`, outDir);
   }
-  console.log("\n✅ 部署完成！");
-  console.log(`🌐 访问地址: https://${config.GITHUB_USERNAME}.github.io`);
+  log.info("部署完成！");
+  log.info(`访问地址: https://${config.GITHUB_USERNAME}.github.io`);
 }
 
 // 主函数
 try {
   deploy();
 } catch (error: any) {
-  console.error(`\n❌ 部署失败: ${error.message}`);
+  log.error(`部署失败: ${error.message}`);
   process.exit(1);
 }

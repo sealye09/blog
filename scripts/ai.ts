@@ -1,6 +1,7 @@
 import process from "node:process";
-import { createOpenAI } from "@ai-sdk/openai";
+
 import { createDeepSeek } from "@ai-sdk/deepseek";
+import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 
 export interface AIConfig {

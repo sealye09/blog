@@ -1,13 +1,15 @@
 import { execSync } from "node:child_process";
 
+import { log } from "../utils/logger.js";
+
 export function exec(command: string, cwd?: string): void {
-  console.log(`\n执行命令: ${command}`);
+  log.info(`\n执行命令: ${command}`);
 
   const _cwd = cwd || process.cwd();
   try {
     execSync(command, { cwd: _cwd, stdio: "inherit", encoding: "utf8" });
   } catch (error: any) {
-    console.error(`命令执行失败: ${error.message}`);
+    log.error(`命令执行失败: ${error.message}`);
     throw error;
   }
 }

@@ -1,6 +1,17 @@
 {
   "permissions": {
-    "allow": ["Bash(npm run build)"],
+    "allow": [
+      "Bash(npm run build)",
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm add:*)",
+      "WebFetch(domain:vitejs.dev)",
+      "WebSearch",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm optimize:verbose:*)",
+      "Bash(pnpm format:*)",
+      "Bash(pnpm list:*)",
+      "Bash(npx prettier:*)"
+    ],
     "deny": [],
     "ask": []
   }

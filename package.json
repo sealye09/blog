@@ -15,7 +15,9 @@
     "deploy": "tsx scripts/deploy.ts",
     "prepare": "lefthook install",
     "gen": "tsx scripts/gen.ts",
-    "gen:staged": "tsx scripts/gen.ts --staged"
+    "gen:staged": "tsx scripts/gen.ts --staged",
+    "optimize": "tsx scripts/optimize-build.ts",
+    "optimize:verbose": "tsx scripts/optimize-build.ts --verbose"
   },
   "dependencies": {
     "@ai-sdk/deepseek": "^1.0.27",
@@ -31,10 +33,17 @@
     "pathe": "^2.0.3"
   },
   "devDependencies": {
+    "@types/html-minifier-terser": "^7.0.2",
+    "@types/jsdom": "^27.0.0",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^22.7.5",
+    "html-minifier-terser": "^7.2.0",
+    "jsdom": "^27.2.0",
     "lefthook": "^1.7.9",
+    "lightningcss": "^1.30.2",
     "prettier": "^3.6.2",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "terser": "^5.44.1",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   }

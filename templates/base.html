@@ -52,13 +52,14 @@
       }
     </script>
 
+    <!-- 快速主题设置，防止闪烁 -->
     <script>
       (function () {
         try {
           var stored = localStorage.getItem("theme");
           var prefersDark =
             window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-          var theme = stored ? stored : prefersDark ? "dark" : "light";
+          var theme = stored || (prefersDark ? "dark" : "light");
           document.documentElement.setAttribute("data-theme", theme);
         } catch (e) {}
       })();
@@ -243,216 +244,11 @@
         <p>Powered by GitHub Pages</p>
       </div>
     </footer>
-    <script>
-      (function () {
-        var btn = document.getElementById("theme-toggle");
-        var mobileBtn = document.getElementById("mobile-theme-toggle");
 
-        if (!btn && !mobileBtn) return;
-
-        function setTheme(theme) {
-          document.documentElement.setAttribute("data-theme", theme);
-          try {
-            localStorage.setItem("theme", theme);
-          } catch (e) {}
-          var meta = document.querySelector('meta[name="theme-color"]');
-          if (meta) {
-            meta.setAttribute("content", theme === "dark" ? "#0a0a0a" : "#ffffff");
-          }
-        }
-
-        function withNoTransitions(fn) {
-          var root = document.documentElement;
-          root.classList.add("disable-transitions");
-          try {
-            fn();
-          } finally {
-            setTimeout(function () {
-              root.classList.remove("disable-transitions");
-            }, 0);
-          }
-        }
-
-        function handleThemeToggle() {
-          var current = document.documentElement.getAttribute("data-theme") || "light";
-          var next = current === "light" ? "dark" : "light";
-          withNoTransitions(function () {
-            setTheme(next);
-          });
-        }
-
-        if (btn) {
-          btn.addEventListener("click", handleThemeToggle);
-        }
-
-        if (mobileBtn) {
-          mobileBtn.addEventListener("click", handleThemeToggle);
-        }
-      })();
-    </script>
-    <script>
-      (function () {
-        // 移动端菜单功能
-        var menuToggle = document.querySelector(".mobile-menu-toggle");
-        var mobileMenu = document.querySelector(".mobile-menu");
-        var header = document.querySelector(".site-header");
-
-        if (!menuToggle || !mobileMenu) return;
-
-        // 切换菜单状态
-        function toggleMenu() {
-          var isExpanded = menuToggle.getAttribute("aria-expanded") === "true";
-          menuToggle.setAttribute("aria-expanded", !isExpanded);
-          mobileMenu.classList.toggle("active");
-
-          // 切换图标
-          var openIcon = menuToggle.querySelector(".menu-icon-open");
-          var closeIcon = menuToggle.querySelector(".menu-icon-close");
-
-          if (isExpanded) {
-            openIcon.style.display = "block";
-            closeIcon.style.display = "none";
-          } else {
-            openIcon.style.display = "none";
-            closeIcon.style.display = "block";
-          }
-
-          // 添加header的active状态用于样式控制
-          if (!isExpanded) {
-            header.classList.add("mobile-menu-open");
-            document.body.classList.add("mobile-menu-open");
-          } else {
-            header.classList.remove("mobile-menu-open");
-            document.body.classList.remove("mobile-menu-open");
-          }
-        }
-
-        // 点击菜单按钮
-        menuToggle.addEventListener("click", function (e) {
-          e.stopPropagation();
-          toggleMenu();
-        });
-
-        // 点击菜单外部关闭菜单
-        document.addEventListener("click", function (e) {
-          if (
-            mobileMenu.classList.contains("active") &&
-            !mobileMenu.contains(e.target) &&
-            !menuToggle.contains(e.target)
-          ) {
-            toggleMenu();
-          }
-        });
-
-        // 窗口大小改变时关闭菜单
-        window.addEventListener("resize", function () {
-          if (window.innerWidth > 768 && mobileMenu.classList.contains("active")) {
-            toggleMenu();
-          }
-        });
-
-        // ESC键关闭菜单
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape" && mobileMenu.classList.contains("active")) {
-            toggleMenu();
-          }
-        });
-      })();
-    </script>
-    <script>
-      (function () {
-        var githubLink = document.querySelector(".github-link");
-        if (githubLink && !githubLink.getAttribute("data-username")) {
-          githubLink.style.display = "none";
-        }
-      })();
-    </script>
-    <script>
-      (function () {
-        var content = document.querySelector(".post-content");
-        var toc = document.querySelector(".post-toc[data-toc]");
-        if (!content || !toc) return;
-        var container = toc.querySelector(".post-toc__body");
-        var title = toc.querySelector(".post-toc__title");
-        if (!container) return;
-
-        // Support h1-h5
-        var headings = Array.prototype.slice.call(content.querySelectorAll("h1, h2, h3, h4, h5"));
-        if (!headings.length) {
-          toc.style.display = "none";
-          return;
-        }
-
-        function slugify(text) {
-          return String(text || "")
-            .trim()
-            .toLowerCase()
-            .replace(/[\s/\\]+/g, "-")
-            .replace(/[^\p{Letter}\p{Number}\-_.]+/gu, "-")
-            .replace(/-+/g, "-")
-            .replace(/^-+|-+$/g, "");
-        }
-
-        headings.forEach(function (heading) {
-          var title = (heading.textContent || "").trim();
-          if (!title) return;
-          if (!heading.id) {
-            var slug = slugify(title);
-            heading.id = slug || "section-" + Math.random().toString(36).slice(2, 8);
-          }
-          var level = heading.tagName.toLowerCase().replace("h", "");
-          var link = document.createElement("a");
-          link.href = "#" + heading.id;
-          link.textContent = title;
-          link.setAttribute("data-level", level);
-          container.appendChild(link);
-        });
-
-        // Mobile collapse toggle
-        var isMobile = window.innerWidth <= 1024;
-        if (isMobile) {
-          toc.setAttribute("data-collapsed", "true");
-          if (title) {
-            title.addEventListener("click", function () {
-              var isCollapsed = toc.getAttribute("data-collapsed") === "true";
-              toc.setAttribute("data-collapsed", isCollapsed ? "false" : "true");
-            });
-          }
-        }
-
-        // Active state tracking
-        var links = container.querySelectorAll("a");
-        var observer = new IntersectionObserver(
-          function (entries) {
-            entries.forEach(function (entry) {
-              if (entry.isIntersecting) {
-                var id = entry.target.id;
-                links.forEach(function (link) {
-                  link.classList.toggle("active", link.getAttribute("href") === "#" + id);
-                });
-              }
-            });
-          },
-          { rootMargin: "-80px 0px -80% 0px" },
-        );
-
-        headings.forEach(function (h) {
-          observer.observe(h);
-        });
-
-        // Smooth scroll
-        links.forEach(function (link) {
-          link.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").slice(1);
-            var target = document.getElementById(id);
-            if (target) {
-              target.scrollIntoView({ behavior: "smooth", block: "start" });
-              history.pushState(null, null, "#" + id);
-            }
-          });
-        });
-      })();
-    </script>
+    <script src="{{basePath}}/assets/js/logger.js"></script>
+    <script src="{{basePath}}/assets/js/theme.js"></script>
+    <script src="{{basePath}}/assets/js/mobile-menu.js"></script>
+    <script src="{{basePath}}/assets/js/github.js"></script>
+    <script src="{{basePath}}/assets/js/toc.js"></script>
   </body>
 </html>
