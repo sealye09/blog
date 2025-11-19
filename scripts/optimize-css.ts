@@ -3,7 +3,7 @@ import * as fs from "node:fs/promises";
 import { bundleAsync, transform } from "lightningcss";
 import { basename, join } from "pathe";
 
-import { log } from "../utils/logger.js";
+import { log } from "../utils/logger";
 
 export interface CssOptimizeOptions {
   minify?: boolean;

@@ -3,7 +3,7 @@ import * as fs from "node:fs/promises";
 import { minify } from "html-minifier-terser";
 import { basename, join } from "pathe";
 
-import { log } from "../utils/logger.js";
+import { log } from "../utils/logger";
 
 export interface HtmlOptimizeOptions {
   minify?: boolean;

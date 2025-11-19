@@ -3,7 +3,7 @@ import * as fs from "node:fs";
 
 import { join } from "pathe";
 
-import { log } from "../utils/logger.js";
+import { log } from "../utils/logger";
 import { config, deployConfig, OUT_DIR } from "./config.js";
 import { build, exec, gitAddAll } from "./utils.js";
 

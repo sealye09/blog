@@ -7,7 +7,7 @@ import process from "node:process";
 import matter from "gray-matter";
 import { basename, extname } from "pathe";
 
-import { log } from "../utils/logger.js";
+import { log } from "../utils/logger";
 import { generateSummary } from "./ai.js";
 
 interface GenerateSummaryOptions {
