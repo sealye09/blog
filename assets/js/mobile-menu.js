@@ -338,10 +338,5 @@
     create: () => new MobileMenu(),
   };
 
-  // 兼容旧版本的全局函数
-  global.toggleMobileMenu = () => mobileMenu.toggle();
-  global.closeMobileMenu = () => mobileMenu.close();
-  global.openMobileMenu = () => mobileMenu.open();
-
   console.info("Mobile-menu.js 模块加载完成");
 })(typeof window !== "undefined" ? window : global);

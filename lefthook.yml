@@ -4,5 +4,5 @@ pre-commit:
   parallel: true
   commands:
     format:
-      run: pnpm prettier --write .
+      run: pnpm run format
       stage_fixed: true

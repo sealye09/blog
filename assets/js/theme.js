@@ -306,10 +306,5 @@
     create: () => new ThemeManager(),
   };
 
-  // 兼容旧版本的全局函数
-  global.setTheme = (theme) => themeManager.setTheme(theme);
-  global.toggleTheme = () => themeManager.toggleTheme();
-  global.getCurrentTheme = () => themeManager.getCurrentTheme();
-
   console.info("Theme.js 模块加载完成");
 })(typeof window !== "undefined" ? window : global);
