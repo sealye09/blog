@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
 
-import { log } from "../utils/logger";
+import { log } from "../utils/logger.js";
 
 export function exec(command: string, cwd?: string): void {
   log.info(`\n执行命令: ${command}`);

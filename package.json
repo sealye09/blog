@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "tsx scripts/blog.ts",
-    "format": "prettier --write .",
+    "format": "prettier --write . --log-level silent",
     "deploy": "tsx scripts/deploy.ts",
     "prepare": "lefthook install",
     "gen": "tsx scripts/gen.ts",

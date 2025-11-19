@@ -9,7 +9,7 @@ import mdAnchor from "markdown-it-anchor";
 import * as fs from "node:fs/promises";
 import { basename, extname, isAbsolute, join } from "pathe";
 
-import { log } from "../utils/logger";
+import { log } from "../utils/logger.js";
 import { config, GITHUB_REPO_URL, OUT_DIR } from "./config.js";
 
 interface PostMeta {

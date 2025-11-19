@@ -2,7 +2,7 @@ import * as fs from "node:fs/promises";
 
 import { join } from "pathe";
 
-import { log } from "../utils/logger";
+import { log } from "../utils/logger.js";
 import { OUT_DIR, optimizeConfig } from "./config.js";
 import { optimizeAllCssFiles } from "./optimize-css.js";
 import { optimizeAllHtmlFiles } from "./optimize-html.js";

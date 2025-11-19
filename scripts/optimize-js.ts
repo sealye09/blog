@@ -4,7 +4,7 @@ import { basename, join } from "pathe";
 import type { ECMA } from "terser";
 import { minify } from "terser";
 
-import { log } from "../utils/logger";
+import { log } from "../utils/logger.js";
 
 export interface JsOptimizeOptions {
   compress?: boolean;
