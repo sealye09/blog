@@ -368,7 +368,7 @@ main {
 }
 
 .content-section {
-  padding-top: 2rem;
+  padding: 2rem 0;
 }
 
 .page-header {
@@ -452,7 +452,7 @@ main {
   }
 
   .content-section {
-    padding-top: 1.5rem;
+    padding: 1.5rem 0;
   }
 
   .page-title {
@@ -510,7 +510,7 @@ main {
   }
 
   .content-section {
-    padding-top: 1.5rem;
+    padding: 1.5rem 0;
   }
 
   .page-title {
