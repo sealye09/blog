@@ -264,7 +264,7 @@ body {
   transition: all 0.3s ease;
 }
 
-.mobile-menu.active {
+.mobile-menu.mobile-menu--open {
   transform: translateY(0);
   opacity: 1;
   visibility: visible;
@@ -426,14 +426,6 @@ main {
     gap: 1.5rem;
   }
 
-  .mobile-menu-toggle {
-    display: none; /* 隐藏移动端菜单按钮 */
-  }
-
-  .mobile-menu {
-    display: none; /* 隐藏移动端菜单 */
-  }
-
   .header-actions {
     display: flex; /* 显示桌面端header-actions */
   }
@@ -441,10 +433,6 @@ main {
   .header-actions .github-link,
   .header-actions .theme-toggle {
     display: flex; /* 显示GitHub图标和主题切换按钮 */
-  }
-
-  .header-actions .mobile-menu-toggle {
-    display: none; /* 隐藏移动端菜单按钮 */
   }
 
   main {
@@ -499,10 +487,6 @@ main {
   .header-actions .github-link,
   .header-actions .theme-toggle {
     display: none; /* 隐藏GitHub图标和主题切换按钮 */
-  }
-
-  .header-actions .mobile-menu-toggle {
-    display: flex; /* 只显示移动端菜单按钮 */
   }
 
   main {
