@@ -31,7 +31,7 @@
 
         // 获取 DOM 元素
         this.content = document.querySelector(".post-content");
-        this.toc = document.querySelector(".post-toc[data-toc]");
+        this.toc = document.querySelector(".post-toc");
 
         if (!this.content || !this.toc) {
           console.debug("目录元素未找到，跳过目录生成", {
@@ -48,6 +48,9 @@
           console.debug("目录容器未找到");
           return;
         }
+
+        // 根据屏幕尺寸设置初始状态
+        this.setupResponsiveState();
 
         // 生成目录
         this.generateTOC();
@@ -155,6 +158,12 @@
       // 目录项点击事件
       this.container.addEventListener("click", this.handleItemClick.bind(this));
 
+      // 目录标题点击事件（折叠展开）
+      if (this.title) {
+        this.title.addEventListener("click", this.handleTitleClick.bind(this));
+        this.title.style.cursor = "pointer";
+      }
+
       // 滚动事件（用于高亮当前目录项）
       window.addEventListener("scroll", this.handleScroll.bind(this), { passive: true });
 
@@ -162,6 +171,27 @@
       window.addEventListener("resize", this.handleResize.bind(this));
 
       console.debug("目录事件已绑定");
+    }
+
+    /**
+     * 处理目录标题点击（折叠展开）
+     */
+    handleTitleClick(event) {
+      // 大屏下不处理标题点击事件
+      if (window.innerWidth > 1024) {
+        return;
+      }
+
+      event.preventDefault();
+      const isCollapsed = this.toc.hasAttribute("data-collapsed");
+
+      if (isCollapsed) {
+        this.toc.removeAttribute("data-collapsed");
+      } else {
+        this.toc.setAttribute("data-collapsed", "true");
+      }
+
+      console.debug("TOC 折叠状态切换", { isCollapsed: !isCollapsed });
     }
 
     /**
@@ -277,9 +307,33 @@
     }
 
     /**
+     * 设置响应式状态
+     */
+    setupResponsiveState() {
+      const isMobile = window.innerWidth <= 1024;
+
+      // 小屏下默认展开状态，但允许折叠
+      if (isMobile) {
+        this.toc.removeAttribute("data-collapsed");
+      } else {
+        // 大屏下强制展开
+        this.toc.removeAttribute("data-collapsed");
+      }
+
+      console.debug("TOC 响应式状态设置", {
+        isMobile,
+        collapsed: this.toc.hasAttribute("data-collapsed"),
+      });
+    }
+
+    /**
      * 处理窗口大小变化
      */
     handleResize() {
+      // 更新响应式状态
+      this.setupResponsiveState();
+
+      // 高亮当前项
       this.highlightCurrentItem();
     }
 

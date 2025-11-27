@@ -105,12 +105,30 @@
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
 }
 
 .post-toc__body {
   margin-top: 0.5rem;
   display: flex;
   flex-direction: column;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.post-toc[data-collapsed="true"] .post-toc__body {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
 }
 
 .post-toc a {
@@ -319,7 +337,37 @@
   }
 }
 
-/* Tablet (≤ 1024px) */
+/* Desktop (> 1024px) - TOC always expanded */
+@media (min-width: 1025px) {
+  .post-toc {
+    position: sticky;
+    top: 80px;
+  }
+
+  .post-toc__title {
+    cursor: default !important;
+    pointer-events: none;
+  }
+
+  .post-toc__title::after {
+    display: none !important;
+  }
+
+  .post-toc__body {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
+  }
+
+  /* 移除大屏下的折叠状态 */
+  .post-toc[data-collapsed="true"] .post-toc__body {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
+  }
+}
+
+/* Tablet and Mobile (≤ 1024px) - TOC collapsible */
 @media (max-width: 1024px) {
   .post {
     grid-template-columns: 1fr;
@@ -355,6 +403,7 @@
     content: "▼";
     font-size: 0.75rem;
     transition: transform 0.2s ease;
+    margin-left: auto;
   }
 
   .post-toc[data-collapsed="true"] .post-toc__title::after {
