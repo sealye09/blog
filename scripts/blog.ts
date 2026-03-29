@@ -7,7 +7,7 @@ import hljs from "highlight.js";
 import MarkdownIt from "markdown-it";
 import mdAnchor from "markdown-it-anchor";
 import * as fs from "node:fs/promises";
-import { basename, extname, isAbsolute, join } from "pathe";
+import { basename, dirname, extname, isAbsolute, join, relative, resolve } from "pathe";
 
 import { log } from "../utils/logger.js";
 import { config, GITHUB_REPO_URL, OUT_DIR } from "./config.js";
@@ -224,6 +224,60 @@ function buildReadmeContent(entries: ListEntry[]): string {
   return readme;
 }
 
+/**
+ * markdown-it 插件：将 .md 内部链接重写为构建后的 .html 路径
+ */
+function createLinkRewritePlugin(
+  slugMap: Map<string, string>,
+  sourceFile: string,
+  currentOutDir: string,
+): (md: MarkdownIt) => void {
+  return (md) => {
+    md.renderer.rules.link_open = (tokens, idx, options, _env, self) => {
+      const href = tokens[idx].attrGet("href");
+      if (href) {
+        const hrefStr = String(href);
+        if (hrefStr.endsWith(".md") || hrefStr.includes(".md#")) {
+          try {
+            const decoded = decodeURIComponent(hrefStr);
+            const hashIdx = decoded.indexOf(".md#");
+            const hash = hashIdx >= 0 ? decoded.slice(hashIdx + 3) : "";
+            const mdPath = hashIdx >= 0 ? decoded.slice(0, hashIdx + 3) : decoded;
+            const sourceDir = dirname(sourceFile);
+            const resolved = resolve(sourceDir, mdPath);
+            const targetOut = slugMap.get(resolved);
+            if (targetOut) {
+              let relPath = relative(currentOutDir, targetOut);
+              if (!relPath.startsWith(".")) {
+                relPath = "./" + relPath;
+              }
+              tokens[idx].attrSet("href", relPath + hash);
+            }
+          } catch {
+            /* 解析失败则保留原链接 */
+          }
+        }
+      }
+      return self.renderToken(tokens, idx, options);
+    };
+  };
+}
+
+interface FileBuildInfo {
+  file: string;
+  raw: string;
+  content: string;
+  meta: PostMeta & { dateCreated?: string; dateModified?: string };
+  baseSlug: string;
+  relativeSlugPath: string;
+  postDir: string;
+  outFile: string;
+  basePath: string;
+  dateValue: number;
+  year: string;
+  month: string;
+}
+
 async function main(): Promise<void> {
   const outDir = OUT_DIR;
 
@@ -231,7 +285,6 @@ async function main(): Promise<void> {
   const postsDir = config.POSTS_DIR;
   const assetsFrom = config.ASSETS_FROM;
 
-  const md = createMdRenderer();
   const files = await readMdFiles(fromDir);
 
   // Load templates
@@ -244,7 +297,10 @@ async function main(): Promise<void> {
   await ensureDir(postsOutDir);
   await copyAssets(assetsFrom, outDir);
 
-  const entries: ListEntry[] = [];
+  const slugMap = new Map<string, string>(); // 源文件绝对路径 → 输出 HTML 绝对路径
+
+  // ---- 第一趟：收集元数据，构建 slug 映射 ----
+  const buildInfos: FileBuildInfo[] = [];
 
   for (const file of files) {
     const raw = await fs.readFile(file, "utf8");
@@ -253,7 +309,6 @@ async function main(): Promise<void> {
     const slugSource = (data as any).slug || meta.title || basename(file, extname(file));
     const fallbackSlug = sanitizeSlug(basename(file, extname(file))) || "post";
     const baseSlug = sanitizeSlug(slugSource) || fallbackSlug;
-    const html = md.render(content);
 
     let dateValue = 0;
     let year = "";
@@ -286,6 +341,35 @@ async function main(): Promise<void> {
 
     const outFile = join(postDir, `${baseSlug}.html`);
     const basePath = buildBasePath(directoriesDepth);
+
+    const resolvedSource = resolve(process.cwd(), file);
+    slugMap.set(resolvedSource, outFile);
+
+    buildInfos.push({
+      file,
+      raw,
+      content,
+      meta,
+      baseSlug,
+      relativeSlugPath,
+      postDir,
+      outFile,
+      basePath,
+      dateValue,
+      year,
+      month,
+    });
+  }
+
+  // ---- 第二趟：渲染内容（含链接重写）并写入文件 ----
+  const entries: ListEntry[] = [];
+
+  for (const info of buildInfos) {
+    const md = createMdRenderer();
+    md.use(createLinkRewritePlugin(slugMap, resolve(process.cwd(), info.file), info.postDir));
+    const html = md.render(info.content);
+
+    const { meta, basePath, relativeSlugPath, outFile, year, month } = info;
 
     let dateHtml = "";
     if (
@@ -347,7 +431,7 @@ async function main(): Promise<void> {
       date: meta.date || "",
       url: `./${postsDir}/${relativeSlugPath}.html`,
       summary: meta.summary || "",
-      dateValue,
+      dateValue: info.dateValue,
     });
   }
 
