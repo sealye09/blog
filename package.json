@@ -4,10 +4,7 @@
   "private": false,
   "type": "module",
   "description": "GitHub Pages 静态站点生成",
-  "engines": {
-    "node": ">=22.0.0",
-    "pnpm": ">=9.0.0"
-  },
+  "packageManager": "pnpm@11.22.0",
   "scripts": {
     "build": "tsx scripts/blog.ts",
     "format": "prettier --write . --log-level silent",
